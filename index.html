@@ -16,11 +16,14 @@
       position: relative;
     }
 
+    /* နောက်ခံ ဘုရားခန်းပုံ (Repo ထဲရှိ ကိုယ့်ပုံဖိုင်နာမည်နှင့် ကိုက်ညီအောင် ပြင်နိုင်ပါသည်) */
     #bgLayer {
       position: absolute;
       inset: 0;
+      background-image: url('./bg.jpg');
       background-size: cover;
       background-position: center;
+      background-repeat: no-repeat;
       background-color: #2b1d0e;
       z-index: 1;
     }
@@ -84,6 +87,7 @@
       object-fit: contain;
     }
 
+    /* အလယ်စာတန်းပြေး (ဘယ်ဘက်မှ "ဓမ္မ..." အရင်ထွက်ပြီး ညာဘက်သို့ ရွေ့မည်) */
     .marquee-wrap {
       position: absolute;
       top: 46%;
@@ -97,26 +101,32 @@
       z-index: 15;
       display: flex;
       align-items: center;
+      direction: ltr;
+    }
+
+    .marquee-track {
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      will-change: transform;
+      animation: slideLeftToRight 15s linear infinite;
     }
 
     .marquee-text {
-      position: absolute;
-      white-space: nowrap;
-      font-size: 18px;
+      display: inline-block;
+      font-size: 17px;
       font-weight: bold;
       color: #ffe28a;
       text-shadow: 0 1px 4px #000;
-      animation: scrollLeftToRight 14s linear infinite;
+      padding: 0 24px;
     }
 
-    @keyframes scrollLeftToRight {
+    @keyframes slideLeftToRight {
       0% {
-        left: 0%;
         transform: translateX(-100%);
       }
       100% {
-        left: 100%;
-        transform: translateX(0%);
+        transform: translateX(100%);
       }
     }
 
@@ -310,8 +320,10 @@
   </div>
 
   <div class="marquee-wrap">
-    <div class="marquee-text" id="marqueeDisplay">
-      ဓမ္မသဘင် (အမွေခံထိုက်သူဖြစ်ပါစေ) တရားတော်
+    <div class="marquee-track">
+      <span class="marquee-text" id="marqueeDisplay">
+        ဓမ္မသဘင် (အမွေခံထိုက်သူဖြစ်ပါစေ) တရားတော်
+      </span>
     </div>
   </div>
 
