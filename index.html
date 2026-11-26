@@ -915,7 +915,7 @@
       ]);
     }
 
-    // Marquee Scrolling Live Title Banner ("ဓမ္မသဘင်" ဘယ်ဘက်မှ အရင်ထွက်ပြီး ညာဘက်သို့ ရွေ့မည်)
+    // Marquee Scrolling Live Title Banner ("ဓမ္မသဘင်" စာလုံးအစ အရင်ထွက်လာမည်)
     if (state.titleEnabled && state.liveTitle) {
       const bx = 135, by = 860, bw = W - 270, bh = 86;
       ctx.fillStyle = 'rgba(15, 18, 24, 0.82)';
@@ -936,12 +936,11 @@
 
       const tw = ctx.measureText(state.liveTitle).width;
       if (titleScrollX === null) {
-        // ဘယ်ဘက်အစွန်းမှ စာသားအစ ("ဓမ္မသဘင်") အရင်စထွက်လာရန်
-        titleScrollX = bx + 16;
+        titleScrollX = bx + bw;
       }
-      titleScrollX += 2.2;
-      if (titleScrollX > bx + bw) {
-        titleScrollX = bx - tw;
+      titleScrollX -= 2.2;
+      if (titleScrollX + tw < bx) {
+        titleScrollX = bx + bw;
       }
 
       ctx.fillText(state.liveTitle, titleScrollX, by + bh / 2 + 2);
