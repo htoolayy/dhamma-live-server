@@ -1,16 +1,14 @@
 {
   "name": "dhamma-live-server",
   "version": "1.0.0",
-  "description": "WebSocket server bridging TikTok LIVE events to Dhamma Live Studio",
+  "description": "Dhamma Live Interactive WebSocket Server for TikTok Live",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
-    "tiktok-live-connector": "latest",
-    "ws": "^8.18.0"
+    "express": "^4.19.2",
+    "tiktok-live-connector": "^1.2.15",
+    "ws": "^8.17.1"
   }
 }
