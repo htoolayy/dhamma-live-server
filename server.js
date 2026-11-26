@@ -1,160 +1,119 @@
+const express = require('express');
+const http = require('http');
 const WebSocket = require('ws');
 const { WebcastPushConnection } = require('tiktok-live-connector');
 
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
 const PORT = process.env.PORT || 10000;
-const wss = new WebSocket.Server({ port: PORT });
 
-console.log(`Server listening on port ${PORT}`);
-
-function safeSend(ws, payload) {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(payload));
-  }
-}
+app.get('/', (req, res) => {
+  res.send('Dhamma Live WebSocket Server is running.');
+});
 
 wss.on('connection', (ws) => {
-  let tiktokConn = null;
+  let tiktokConnection = null;
 
-  function cleanupTikTok() {
-    if (tiktokConn) {
-      try {
-        tiktokConn.removeAllListeners();
-      } catch (_) {}
-      try {
-        tiktokConn.disconnect();
-      } catch (_) {}
-      tiktokConn = null;
+  const safeSend = (data) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(data));
     }
-  }
+  };
 
-  safeSend(ws, {
-    type: 'status',
-    status: 'ready',
-    message: 'WebSocket server ready'
-  });
+  safeSend({ type: 'status', message: 'WebSocket server ready' });
 
-  ws.on('message', async (rawData) => {
+  ws.on('message', async (rawMessage) => {
     try {
-      const msg = JSON.parse(rawData.toString());
+      const msg = JSON.parse(rawMessage.toString());
 
-      if (msg.type === 'disconnect') {
-        cleanupTikTok();
-        safeSend(ws, { type: 'status', status: 'offline' });
-        return;
-      }
+      if (msg.type === 'connect' && msg.username) {
+        const cleanUsername = msg.username.replace(/^@/, '').trim();
 
-      if (msg.type === 'connect') {
-        const username = String(msg.username || '').replace(/^@/, '').trim();
-        if (!username) {
-          safeSend(ws, { type: 'error', message: 'TikTok @username ထည့်သွင်းပါ။' });
-          return;
+        if (tiktokConnection) {
+          try {
+            tiktokConnection.disconnect();
+          } catch (_) {}
+          tiktokConnection = null;
         }
 
-        cleanupTikTok();
-        safeSend(ws, { type: 'status', status: 'connecting', username });
+        safeSend({ type: 'status', message: `Connecting to @${cleanUsername}...` });
 
-        tiktokConn = new WebcastPushConnection(username, {
-          processInitialData: true,
+        tiktokConnection = new WebcastPushConnection(cleanUsername, {
+          processInitialData: false,
           enableExtendedGiftInfo: true,
-          enableWebsocketUpgrade: true,
-          requestHeaders: {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
-            'Accept-Language': 'en-US,en;q=0.9'
-          }
+          requestPollingIntervalMs: 2000
         });
 
-        tiktokConn.on('connected', (state) => {
-          safeSend(ws, {
+        try {
+          const state = await tiktokConnection.connect();
+          safeSend({
             type: 'status',
-            status: 'connected',
-            username,
-            roomId: state && state.roomId ? state.roomId : null
+            message: `Connected to @${cleanUsername} (Room: ${state.roomId})`
           });
-        });
+        } catch (err) {
+          safeSend({
+            type: 'error',
+            message: `Connection failed: ${err?.message || 'Unable to connect (Live may be offline or blocked)'}`
+          });
+        }
 
-        tiktokConn.on('disconnected', () => {
-          safeSend(ws, { type: 'status', status: 'offline' });
-        });
-
-        tiktokConn.on('member', (data) => {
-          safeSend(ws, {
+        tiktokConnection.on('member', (data) => {
+          safeSend({
             type: 'join',
-            user: data.uniqueId || data.nickname || 'ဧည့်သည်',
-            nickname: data.nickname || data.uniqueId || 'ဧည့်သည်'
+            uniqueId: data.uniqueId,
+            nickname: data.nickname || data.uniqueId,
+            profilePictureUrl: data.profilePictureUrl || ''
           });
         });
 
-        tiktokConn.on('chat', (data) => {
-          safeSend(ws, {
+        tiktokConnection.on('chat', (data) => {
+          safeSend({
             type: 'chat',
-            user: data.uniqueId || data.nickname || 'ဧည့်သည်',
-            nickname: data.nickname || data.uniqueId || 'ဧည့်သည်',
+            uniqueId: data.uniqueId,
+            nickname: data.nickname || data.uniqueId,
             comment: data.comment || ''
           });
         });
 
-        tiktokConn.on('gift', (data) => {
-          const streakFinished = data.giftType === 1 && !data.repeatEnd;
-          if (streakFinished) return;
+        tiktokConnection.on('gift', (data) => {
+          if (data.giftType === 1 && !data.repeatEnd) return;
 
-          safeSend(ws, {
+          safeSend({
             type: 'gift',
-            user: data.uniqueId || data.nickname || 'အလှူရှင်',
-            nickname: data.nickname || data.uniqueId || 'အလှူရှင်',
-            giftName: data.giftName || 'လက်ဆောင်',
-            repeatCount: data.repeatCount || 1
+            uniqueId: data.uniqueId,
+            nickname: data.nickname || data.uniqueId,
+            giftId: data.giftId,
+            giftName: data.giftName || 'Gift',
+            giftPictureUrl: data.giftPictureUrl || '',
+            repeatCount: data.repeatCount || 1,
+            diamondCount: data.diamondCount || 1
           });
         });
 
-        tiktokConn.on('streamEnd', () => {
-          safeSend(ws, {
-            type: 'status',
-            status: 'offline',
-            message: 'TikTok LIVE ပြီးဆုံးသွားပါပြီ။'
-          });
+        tiktokConnection.on('disconnected', () => {
+          safeSend({ type: 'status', message: 'TikTok Live disconnected' });
         });
 
-        tiktokConn.on('error', (err) => {
-          const errText = err && err.message ? err.message : String(err);
-          safeSend(ws, {
-            type: 'error',
-            message: errText.includes('403')
-              ? 'TikTok ဘက်မှ Render Cloud Request ကို 403 ပိတ်ထားပါသည်။ Test ခလုတ်များဖြင့် ဆက်လက်လွှင့်နိုင်ပါသည်။'
-              : errText
-          });
+        tiktokConnection.on('error', (err) => {
+          safeSend({ type: 'error', message: err?.message || 'TikTok stream error' });
         });
-
-        try {
-          const state = await tiktokConn.connect();
-          safeSend(ws, {
-            type: 'status',
-            status: 'connected',
-            username,
-            roomId: state && state.roomId ? state.roomId : null
-          });
-        } catch (connectErr) {
-          const errText = connectErr && connectErr.message ? connectErr.message : String(connectErr);
-          safeSend(ws, {
-            type: 'error',
-            message: errText.includes('403')
-              ? 'Failed to sign request (403): TikTok ဘက်မှ Render IP ကို 403 ပိတ်ထားပါသည်။ Test Join / Test Rose ခလုတ်များဖြင့် Live ဆက်လွှင့်နိုင်ပါသည်။'
-              : `ချိတ်ဆက်မှု မအောင်မြင်ပါ: ${errText}`
-          });
-        }
       }
-    } catch (parseErr) {
-      safeSend(ws, {
-        type: 'error',
-        message: `Invalid request format: ${parseErr.message}`
-      });
+    } catch (e) {
+      safeSend({ type: 'error', message: 'Invalid command format' });
     }
   });
 
   ws.on('close', () => {
-    cleanupTikTok();
+    if (tiktokConnection) {
+      try {
+        tiktokConnection.disconnect();
+      } catch (_) {}
+    }
   });
+});
 
-  ws.on('error', () => {
-    cleanupTikTok();
-  });
+server.listen(PORT, () => {
+  console.log(`Dhamma Live Server listening on port ${PORT}`);
 });
