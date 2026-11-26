@@ -2,7 +2,7 @@
 <html lang="my">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Dhamma Live Studio Pro</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
@@ -20,11 +20,12 @@
       display: block; width: 100%; height: 100%; object-fit: cover;
     }
 
+    /* Top-right floating menu button (clear of iPhone bottom bar) */
     #menuBtn {
-      position: absolute; bottom: 18px; right: 18px; z-index: 20;
-      width: 44px; height: 44px; border-radius: 50%;
+      position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px; z-index: 20;
+      width: 42px; height: 42px; border-radius: 50%;
       background: rgba(20, 22, 28, 0.72); border: 1.5px solid #e6b84c;
-      color: #f6d365; font-size: 20px; display: flex; align-items: center; justify-content: center;
+      color: #f6d365; font-size: 19px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; backdrop-filter: blur(6px);
     }
 
@@ -35,7 +36,7 @@
     }
     #controlModal.open { display: flex; }
     .panel {
-      width: 100%; max-width: 400px; max-height: 92vh; overflow-y: auto;
+      width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;
       background: #181a20; border: 1.5px solid #d4a644; border-radius: 18px;
       padding: 14px; color: #f3f4f6; box-shadow: 0 20px 50px rgba(0,0,0,0.85);
     }
@@ -146,7 +147,7 @@
 
       <div class="btn-grid">
         <button class="ctrl-btn" id="playPauseBtn">▶ Play</button>
-        <button class="ctrl-btn" id="restartSeatsBtn">↻ Reset Seats</button>
+        <button class="ctrl-btn" id="restartSeatsBtn">↻ Clear Seats</button>
         <button class="ctrl-btn" id="pickAudioBtn">📂 + တရား MP3</button>
         <button class="ctrl-btn" id="pickBgBtn">🖼️ နောက်ခံပုံပြောင်း</button>
       </div>
@@ -156,7 +157,7 @@
       <!-- PNG Character Sprites Picker -->
       <div class="section-box">
         <div class="section-title">
-          <span>🧍 PNG ဇာတ်ကောင်ပုံများ (Transparent PNG)</span>
+          <span>🧍 PNG ဇာတ်ကောင်ပုံများ</span>
         </div>
         <div class="btn-grid" style="margin-bottom:6px;">
           <button class="ctrl-btn" id="btnMaleWalk">🚶 အမျိုးသား လျှောက်</button>
@@ -180,6 +181,10 @@
         <input type="range" id="sfxVol" min="0" max="1" step="0.05" value="0.85" />
       </div>
 
+      <div class="toggle-row">
+        <span>👥 အရန်ပရိသတ် ကြိုထည့်ရန်</span>
+        <div class="switch on" data-key="initialCrowdEnabled"></div>
+      </div>
       <div class="toggle-row">
         <span>✨ ရောင်ခြည်တန်း (Light Rays)</span>
         <div class="switch on" data-key="raysEnabled"></div>
@@ -220,7 +225,7 @@
           <span class="status-pill" id="wsStatus">Offline</span>
         </div>
         <input type="text" class="text-input" id="wsUrlInput" placeholder="wss://your-server.onrender.com" />
-        <input type="text" class="text-input" id="usernameInput" placeholder="@username (ဥပမာ - alfunmyanmar)" />
+        <input type="text" class="text-input" id="usernameInput" placeholder="@username" />
         <button class="connect-btn" id="connectBtn">Connect TikTok LIVE</button>
       </div>
 
@@ -244,7 +249,6 @@
   const canvas = document.getElementById('stage');
   const ctx = canvas.getContext('2d');
 
-  // Cross-browser rounded rectangle helper (works on older iOS Safari too)
   function drawRoundRect(x, y, w, h, r) {
     const radius = Math.min(r, w / 2, h / 2);
     ctx.beginPath();
@@ -262,6 +266,7 @@
   canvas.height = H;
 
   const state = {
+    initialCrowdEnabled: true,
     raysEnabled: true,
     smokeEnabled: true,
     commentsEnabled: true,
@@ -283,7 +288,19 @@
   document.getElementById('usernameInput').value = state.username;
   document.getElementById('charScaleSlider').value = state.charScale;
 
-  // --- PNG SPRITES LOADER (Auto-loads assets/*.png or Phone File Picker) ---
+  // --- AUTO-LOAD BACKGROUND & CHARACTER PNGs FROM assets/ ---
+  function tryLoadBg(paths, idx = 0) {
+    if (idx >= paths.length) return;
+    const img = new Image();
+    img.onload = () => {
+      state.customBg = img;
+      document.getElementById('pickBgBtn').classList.add('loaded');
+    };
+    img.onerror = () => tryLoadBg(paths, idx + 1);
+    img.src = paths[idx];
+  }
+  tryLoadBg(['assets/bg.png', 'assets/bg.jpg', 'assets/bg.jpeg', 'assets/bg.webp']);
+
   const sprites = {
     maleWalk: null,
     maleKneel: null,
@@ -320,16 +337,14 @@
       const btnId = spriteBtnMap[key];
       if (btnId) document.getElementById(btnId).classList.add('loaded');
     };
-    img.onerror = () => { /* Silent fallback to built-in canvas vector character */ };
+    img.onerror = () => {};
     img.src = src;
   }
 
-  // Try preloading default assets/ PNGs if present in repository
   Object.entries(defaultAssetPaths).forEach(([key, path]) => {
     loadSpriteFromSrc(key, path);
   });
 
-  // Phone File Picker for PNG Character Sprites
   let activeSpriteSlot = null;
   const spriteInput = document.getElementById('spriteInput');
 
@@ -344,8 +359,7 @@
   spriteInput.addEventListener('change', (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file || !activeSpriteSlot) return;
-    const url = URL.createObjectURL(file);
-    loadSpriteFromSrc(activeSpriteSlot, url);
+    loadSpriteFromSrc(activeSpriteSlot, URL.createObjectURL(file));
   });
 
   // --- AUDIO SYSTEM ---
@@ -406,31 +420,47 @@
     }
   }, 16000);
 
-  // --- SEATING GRID (16 Left + 16 Right = 32 Seats) ---
+  // --- SEATING GRID (16 Left + 16 Right = 32 Seats aligned to carpets) ---
   const seats = [];
-  function initSeats() {
+  function initSeats(populateCrowd = state.initialCrowdEnabled) {
     seats.length = 0;
     const rows = 8;
-    const startY = 890;
-    const endY = 1760;
+    const startY = 1290;
+    const endY = 1835;
 
     for (let r = 0; r < rows; r++) {
       const t = r / (rows - 1);
       const y = startY + t * (endY - startY);
-      const perspective = 0.72 + t * 0.36;
+      const perspective = 0.68 + t * 0.36;
 
-      const leftOuterX = 270 - t * 90;
-      const leftInnerX = 415 - t * 55;
+      // Left floral carpet (2 columns)
+      const leftOuterX = 275 - t * 95;
+      const leftInnerX = 395 - t * 65;
       seats.push({ side: 'L', row: r, col: 0, x: leftOuterX, y, scale: perspective, occupant: null });
       seats.push({ side: 'L', row: r, col: 1, x: leftInnerX, y, scale: perspective, occupant: null });
 
-      const rightInnerX = 665 + t * 55;
-      const rightOuterX = 810 + t * 90;
+      // Right floral carpet (2 columns)
+      const rightInnerX = 685 + t * 65;
+      const rightOuterX = 805 + t * 95;
       seats.push({ side: 'R', row: r, col: 0, x: rightInnerX, y, scale: perspective, occupant: null });
       seats.push({ side: 'R', row: r, col: 1, x: rightOuterX, y, scale: perspective, occupant: null });
     }
+
+    if (populateCrowd) {
+      // Pre-fill 20 seats with background devotees (no name badge, easily replaced when real viewers join)
+      seats.forEach((s, idx) => {
+        if (idx % 3 !== 2) {
+          s.occupant = {
+            uniqueId: 'bg_devotee_' + idx,
+            nickname: '',
+            isFemale: (idx % 2 === 1),
+            isPlaceholder: true
+          };
+        }
+      });
+    }
   }
-  initSeats();
+  initSeats(true);
 
   // --- PARTICLES: GOLDEN LEAVES + INCENSE SMOKE ---
   const actionQueue = [];
@@ -452,11 +482,10 @@
   }
 
   function spawnSmokeWisp() {
-    // 3 incense sticks located on the altar table at x = W/2, y = 635
     const stickOffset = (Math.floor(Math.random() * 3) - 1) * 10;
     smokeParticles.push({
       x: W / 2 + stickOffset,
-      y: 632,
+      y: 1035,
       vx: (Math.random() - 0.5) * 0.35,
       vy: -(0.75 + Math.random() * 0.65),
       radius: 5 + Math.random() * 5,
@@ -474,11 +503,17 @@
   }
 
   function findSeatForUser(uniqueId) {
+    // 1. Reuse existing seat if same viewer already seated
     for (const s of seats) {
       if (s.occupant && s.occupant.uniqueId === uniqueId) return s;
     }
+    // 2. Take an empty seat first
     const empty = seats.filter(s => !s.occupant);
     if (empty.length > 0) return empty[Math.floor(Math.random() * empty.length)];
+    // 3. Replace a background placeholder devotee
+    const placeholders = seats.filter(s => s.occupant && s.occupant.isPlaceholder);
+    if (placeholders.length > 0) return placeholders[Math.floor(Math.random() * placeholders.length)];
+    // 4. Otherwise replace a random seat
     return seats[Math.floor(Math.random() * seats.length)];
   }
 
@@ -509,7 +544,7 @@
       seat,
       x: W / 2,
       y: H + 40,
-      targetY: 790,
+      targetY: 1215,
       phase: 'walk_up',
       timer: 0,
       step: 0
@@ -520,7 +555,7 @@
       floatingTexts.push({
         text: `🙏 ${job.nickname} မှ ${job.label}`,
         x: W / 2,
-        y: 720,
+        y: 1120,
         alpha: 1,
         vy: -0.6
       });
@@ -534,12 +569,8 @@
     frameCount++;
     processQueue();
 
-    // Rotate golden light rays slowly
-    if (state.raysEnabled) {
-      rayAngle += 0.0022;
-    }
+    if (state.raysEnabled) rayAngle += 0.0022;
 
-    // Spawn & update incense smoke
     if (state.smokeEnabled) {
       if (frameCount % 6 === 0) spawnSmokeWisp();
       for (let i = smokeParticles.length - 1; i >= 0; i--) {
@@ -549,13 +580,10 @@
         sp.y += sp.vy;
         sp.radius += 0.16;
         sp.alpha -= 0.0017;
-        if (sp.alpha <= 0 || sp.y < 180) {
-          smokeParticles.splice(i, 1);
-        }
+        if (sp.alpha <= 0 || sp.y < 520) smokeParticles.splice(i, 1);
       }
     }
 
-    // Update golden leaves
     for (const p of leafParticles) {
       p.y += p.vy;
       p.x += Math.sin(p.phase += 0.02) * 0.7 + p.vx;
@@ -564,7 +592,6 @@
       if (p.x > W) p.x = 0;
     }
 
-    // Update floating banners
     for (let i = floatingTexts.length - 1; i >= 0; i--) {
       const ft = floatingTexts[i];
       ft.y += ft.vy;
@@ -572,7 +599,6 @@
       if (ft.alpha <= 0) floatingTexts.splice(i, 1);
     }
 
-    // Update active walker
     if (activeWalker) {
       const w = activeWalker;
       w.step += 0.18;
@@ -595,7 +621,8 @@
           w.seat.occupant = {
             uniqueId: w.uniqueId,
             nickname: w.nickname,
-            isFemale: w.isFemale
+            isFemale: w.isFemale,
+            isPlaceholder: false
           };
           activeWalker = null;
         } else {
@@ -610,32 +637,27 @@
   function drawGoldenLightRays() {
     if (!state.raysEnabled) return;
     ctx.save();
-    const cx = W / 2;
-    const cy = 395;
-    ctx.translate(cx, cy);
+    ctx.translate(W / 2, 560);
     ctx.rotate(rayAngle);
 
     const numRays = 16;
     const maxRadius = 640;
 
-    // Soft central divine glow
     const coreGlow = ctx.createRadialGradient(0, 0, 20, 0, 0, 380);
-    coreGlow.addColorStop(0, 'rgba(255, 240, 165, 0.42)');
-    coreGlow.addColorStop(0.5, 'rgba(251, 191, 36, 0.16)');
+    coreGlow.addColorStop(0, 'rgba(255, 240, 165, 0.35)');
+    coreGlow.addColorStop(0.5, 'rgba(251, 191, 36, 0.14)');
     coreGlow.addColorStop(1, 'rgba(251, 191, 36, 0)');
     ctx.fillStyle = coreGlow;
     ctx.beginPath();
     ctx.arc(0, 0, 380, 0, Math.PI * 2);
     ctx.fill();
 
-    // Rotating Sunbeams
     for (let i = 0; i < numRays; i++) {
       const a1 = (i / numRays) * Math.PI * 2;
       const a2 = a1 + (Math.PI / numRays) * 0.72;
-
       const rayGrad = ctx.createRadialGradient(0, 0, 35, 0, 0, maxRadius);
-      rayGrad.addColorStop(0, 'rgba(254, 240, 138, 0.32)');
-      rayGrad.addColorStop(0.55, 'rgba(245, 158, 11, 0.11)');
+      rayGrad.addColorStop(0, 'rgba(254, 240, 138, 0.28)');
+      rayGrad.addColorStop(0.55, 'rgba(245, 158, 11, 0.09)');
       rayGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
 
       ctx.fillStyle = rayGrad;
@@ -649,46 +671,14 @@
     ctx.restore();
   }
 
-  function drawIncensePotAndSmoke() {
+  function drawIncenseSmoke() {
     if (!state.smokeEnabled) return;
-
-    // Draw Golden Incense Burner (အမွှေးတိုင်အိုး) on the Altar Table
     ctx.save();
-    const cx = W / 2;
-    const potY = 665;
-
-    // 3 Incense sticks
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 3;
-    [-9, 0, 9].forEach((dx, idx) => {
-      const topY = 634 - (idx === 1 ? 4 : 0);
-      ctx.beginPath();
-      ctx.moveTo(cx + dx * 0.5, potY - 12);
-      ctx.lineTo(cx + dx, topY);
-      ctx.stroke();
-
-      // Glowing red ember tip
-      ctx.fillStyle = '#ff4500';
-      ctx.beginPath();
-      ctx.arc(cx + dx, topY, 3, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    // Brass Bowl
-    const bowlGrad = ctx.createLinearGradient(cx - 24, potY - 16, cx + 24, potY);
-    bowlGrad.addColorStop(0, '#fde68a');
-    bowlGrad.addColorStop(0.5, '#d97706');
-    bowlGrad.addColorStop(1, '#92400e');
-    ctx.fillStyle = bowlGrad;
-    drawRoundRect(cx - 22, potY - 16, 44, 16, 6);
-    ctx.fill();
-
-    // Draw Curling Smoke Wisps
     for (const sp of smokeParticles) {
       const grad = ctx.createRadialGradient(sp.x, sp.y, 1, sp.x, sp.y, sp.radius);
-      grad.addColorStop(0, `rgba(245, 247, 250, ${sp.alpha})`);
-      grad.addColorStop(0.6, `rgba(226, 232, 240, ${sp.alpha * 0.5})`);
-      grad.addColorStop(1, 'rgba(226, 232, 240, 0)');
+      grad.addColorStop(0, `rgba(255, 255, 255, ${sp.alpha})`);
+      grad.addColorStop(0.6, `rgba(241, 245, 249, ${sp.alpha * 0.5})`);
+      grad.addColorStop(1, 'rgba(241, 245, 249, 0)');
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(sp.x, sp.y, sp.radius, 0, Math.PI * 2);
@@ -698,89 +688,80 @@
   }
 
   function drawDefaultScene() {
-    const sky = ctx.createLinearGradient(0, 0, 0, 820);
+    const sky = ctx.createLinearGradient(0, 0, 0, 1150);
     sky.addColorStop(0, '#132a1c');
     sky.addColorStop(0.55, '#274c33');
     sky.addColorStop(1, '#4a6b48');
     ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, W, 820);
+    ctx.fillRect(0, 0, W, 1150);
 
-    // Light rays behind the Buddha statue
     drawGoldenLightRays();
 
-    // Pagoda Spire
     ctx.fillStyle = '#d97706';
     ctx.beginPath();
-    ctx.moveTo(W / 2, 130);
-    ctx.lineTo(W / 2 - 42, 270);
-    ctx.lineTo(W / 2 + 42, 270);
+    ctx.moveTo(W / 2, 260);
+    ctx.lineTo(W / 2 - 48, 420);
+    ctx.lineTo(W / 2 + 48, 420);
     ctx.closePath();
     ctx.fill();
 
-    // Buddha Statue
-    const goldGrad = ctx.createLinearGradient(W / 2 - 120, 260, W / 2 + 120, 620);
+    const goldGrad = ctx.createLinearGradient(W / 2 - 130, 410, W / 2 + 130, 860);
     goldGrad.addColorStop(0, '#fde68a');
     goldGrad.addColorStop(0.5, '#f59e0b');
     goldGrad.addColorStop(1, '#b45309');
     ctx.fillStyle = goldGrad;
 
     ctx.beginPath();
-    ctx.arc(W / 2, 320, 44, 0, Math.PI * 2);
+    ctx.arc(W / 2, 480, 50, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(W / 2, 273, 18, 0, Math.PI * 2);
+    ctx.arc(W / 2, 425, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    drawRoundRect(W / 2 - 86, 368, 172, 145, 50);
+    drawRoundRect(W / 2 - 96, 535, 192, 165, 55);
+    ctx.fill();
+    drawRoundRect(W / 2 - 175, 680, 350, 85, 40);
     ctx.fill();
 
-    drawRoundRect(W / 2 - 155, 495, 310, 75, 36);
-    ctx.fill();
-
-    // Pedestal & Altar Table
     ctx.fillStyle = '#78350f';
-    ctx.fillRect(W / 2 - 210, 570, 420, 45);
+    ctx.fillRect(W / 2 - 230, 765, 460, 55);
     ctx.fillStyle = '#fbbf24';
-    ctx.fillRect(W / 2 - 225, 615, 450, 22);
+    ctx.fillRect(W / 2 - 245, 820, 490, 26);
 
     ctx.fillStyle = '#451a03';
-    ctx.fillRect(W / 2 - 190, 665, 380, 55);
+    ctx.fillRect(W / 2 - 200, 1060, 400, 60);
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 4;
-    ctx.strokeRect(W / 2 - 190, 665, 380, 55);
+    ctx.strokeRect(W / 2 - 200, 1060, 400, 60);
 
-    // Courtyard Floor
-    const floor = ctx.createLinearGradient(0, 720, 0, H);
+    const floor = ctx.createLinearGradient(0, 1120, 0, H);
     floor.addColorStop(0, '#d6cfc2');
     floor.addColorStop(1, '#b8ae9c');
     ctx.fillStyle = floor;
-    ctx.fillRect(0, 720, W, H - 720);
+    ctx.fillRect(0, 1120, W, H - 1120);
 
-    // Center Walkway
     ctx.fillStyle = '#e7e1d5';
     ctx.beginPath();
-    ctx.moveTo(W / 2 - 80, 720);
-    ctx.lineTo(W / 2 + 80, 720);
-    ctx.lineTo(W / 2 + 155, H);
-    ctx.lineTo(W / 2 - 155, H);
+    ctx.moveTo(W / 2 - 90, 1120);
+    ctx.lineTo(W / 2 + 90, 1120);
+    ctx.lineTo(W / 2 + 165, H);
+    ctx.lineTo(W / 2 - 165, H);
     ctx.closePath();
     ctx.fill();
 
-    // Left & Right Golden Carpets
-    drawCarpet(80, 445, 10, 365);
-    drawCarpet(635, 1000, 715, 1070);
+    drawCarpet(140, 440, 40, 365);
+    drawCarpet(640, 940, 715, 1040);
   }
 
   function drawCarpet(topL, topR, botL, botR) {
     ctx.fillStyle = '#f5efe6';
     ctx.beginPath();
-    ctx.moveTo(topL, 820);
-    ctx.lineTo(topR, 820);
+    ctx.moveTo(topL, 1220);
+    ctx.lineTo(topR, 1220);
     ctx.lineTo(botR, H);
     ctx.lineTo(botL, H);
     ctx.closePath();
     ctx.fill();
-
     ctx.strokeStyle = '#d97706';
     ctx.lineWidth = 6;
     ctx.stroke();
@@ -801,46 +782,40 @@
     ctx.translate(x, y + bob);
     ctx.scale(finalScale, finalScale);
 
-    // Ground Contact Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
     ctx.beginPath();
-    ctx.ellipse(0, 10, 30, 11, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 8, 28, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
     const spriteImg = getCharacterSprite(isFemale, pose);
     let topAnchorY = pose === 'walk' ? -96 : -82;
 
     if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
-      // Render Custom PNG Character Sprite anchored at bottom-center (0, 10)
-      const targetHeight = pose === 'walk' ? 145 : 122;
+      const targetHeight = pose === 'walk' ? 150 : 128;
       const aspect = spriteImg.naturalWidth / spriteImg.naturalHeight;
       const drawW = targetHeight * aspect;
       const drawH = targetHeight;
 
       ctx.save();
       if (pose === 'bow') {
-        // Gentle bowing motion when paying homage
-        ctx.translate(0, 10);
+        ctx.translate(0, 8);
         ctx.scale(1.03, 0.91);
-        ctx.translate(0, -10);
+        ctx.translate(0, -8);
       }
-      ctx.drawImage(spriteImg, -drawW / 2, 10 - drawH, drawW, drawH);
+      ctx.drawImage(spriteImg, -drawW / 2, 8 - drawH, drawW, drawH);
       ctx.restore();
 
-      topAnchorY = 10 - drawH - 12;
+      topAnchorY = 8 - drawH - 10;
     } else {
-      // Built-in Vector Character Fallback
       const longyiColor = isFemale ? '#9d174d' : '#7f1d1d';
       if (pose === 'kneel' || pose === 'bow') {
         const bowOffset = pose === 'bow' ? 12 : 0;
         ctx.fillStyle = longyiColor;
         drawRoundRect(-22, -16 + bowOffset * 0.4, 44, 28, 10);
         ctx.fill();
-
         ctx.fillStyle = '#f8fafc';
         drawRoundRect(-18, -46 + bowOffset, 36, 34, 10);
         ctx.fill();
-
         ctx.fillStyle = '#1f2937';
         ctx.beginPath();
         ctx.arc(0, -58 + bowOffset, 14, 0, Math.PI * 2);
@@ -855,11 +830,9 @@
         ctx.fillStyle = longyiColor;
         drawRoundRect(-16, -28, 32, 38, 6);
         ctx.fill();
-
         ctx.fillStyle = '#f8fafc';
         drawRoundRect(-18, -60, 36, 35, 9);
         ctx.fill();
-
         ctx.fillStyle = '#1f2937';
         ctx.beginPath();
         ctx.arc(0, -73, 14, 0, Math.PI * 2);
@@ -873,21 +846,14 @@
       }
     }
 
-    // Offering Icon or PNG above character
     if (offering) {
-      const offImg = sprites[offering];
-      if (offImg && offImg.complete && offImg.naturalWidth > 0) {
-        ctx.drawImage(offImg, -22, topAnchorY - 46, 44, 44);
-      } else {
-        const icons = { flower: '🌸', water: '💧', fruit: '🍎', lamp: '🕯️' };
-        ctx.font = '32px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(icons[offering] || '🎁', 0, topAnchorY - 12);
-      }
+      const icons = { flower: '🌸', water: '💧', fruit: '🍎', lamp: '🕯️' };
+      ctx.font = '32px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(icons[offering] || '🎁', 0, topAnchorY - 12);
       topAnchorY -= 44;
     }
 
-    // Floating Name Tag Pill
     if (nickname) {
       const label = nickname.length > 14 ? nickname.slice(0, 13) + '…' : nickname;
       ctx.font = 'bold 17px Pyidaungsu, sans-serif';
@@ -907,35 +873,36 @@
   }
 
   function drawOverlays() {
+    // Safe inset margins (105px) so nothing clips on tall iPhone screens
     if (state.guideEnabled) {
-      drawGuideCard(32, 175, 375, 225, [
+      drawGuideCard(105, 165, 345, 210, [
         '🎁 လက်ဆောင်ကပ်လှူရန်',
         '🌹 Rose - ပန်းလှူ',
-        '🍦 Ice Cream - ရေချမ်းကပ်',
+        '🍦 Ice Cream - ရေချမ်း',
         '🎮 GG - သစ်သီးလှူ'
       ]);
 
-      drawGuideCard(W - 407, 175, 375, 295, [
+      drawGuideCard(W - 450, 165, 345, 275, [
         '🙏 Join - ဘုရားရှိခိုး',
         '💬 Comment ဆုချွေ',
         '🌸 "ပန်း" - ပန်းလှူ',
-        '💧 "ရေချမ်း" - ရေချမ်းကပ်',
-        '🍎 "သစ်သီး" - သစ်သီးလှူ',
+        '💧 "ရေချမ်း" - ရေချမ်း',
+        '🍎 "သစ်သီး" - သစ်သီး',
         '🕯️ "ဆီမီး" - ဆီမီးလှူ'
       ]);
     }
 
     if (state.titleEnabled && state.liveTitle) {
-      const bx = 130, by = 505, bw = W - 260, bh = 96;
+      const bx = 135, by = 860, bw = W - 270, bh = 86;
       ctx.fillStyle = 'rgba(15, 18, 24, 0.82)';
       drawRoundRect(bx, by, bw, bh, 20);
       ctx.fill();
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.75)';
       ctx.lineWidth = 3;
       ctx.stroke();
 
       ctx.fillStyle = '#facc15';
-      ctx.font = 'bold 46px Pyidaungsu, sans-serif';
+      ctx.font = 'bold 42px Pyidaungsu, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(state.liveTitle, W / 2, by + bh / 2 + 2);
@@ -944,10 +911,10 @@
     for (const ft of floatingTexts) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, ft.alpha);
-      ctx.font = 'bold 30px Pyidaungsu, sans-serif';
-      const w = ctx.measureText(ft.text).width + 44;
+      ctx.font = 'bold 28px Pyidaungsu, sans-serif';
+      const w = ctx.measureText(ft.text).width + 40;
       ctx.fillStyle = 'rgba(17, 24, 39, 0.88)';
-      drawRoundRect(ft.x - w / 2, ft.y - 26, w, 52, 26);
+      drawRoundRect(ft.x - w / 2, ft.y - 25, w, 50, 25);
       ctx.fill();
       ctx.strokeStyle = '#fbbf24';
       ctx.lineWidth = 2.5;
@@ -963,10 +930,10 @@
 
   function drawGuideCard(x, y, w, h, lines) {
     ctx.save();
-    ctx.fillStyle = 'rgba(15, 18, 25, 0.78)';
-    drawRoundRect(x, y, w, h, 18);
+    ctx.fillStyle = 'rgba(15, 18, 25, 0.76)';
+    drawRoundRect(x, y, w, h, 16);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -974,8 +941,8 @@
     ctx.textBaseline = 'top';
     lines.forEach((line, idx) => {
       ctx.fillStyle = idx === 0 ? '#fde047' : '#f3f4f6';
-      ctx.font = idx === 0 ? 'bold 25px Pyidaungsu, sans-serif' : '23px Pyidaungsu, sans-serif';
-      ctx.fillText(line, x + 20, y + 18 + idx * 43);
+      ctx.font = idx === 0 ? 'bold 23px Pyidaungsu, sans-serif' : '21px Pyidaungsu, sans-serif';
+      ctx.fillText(line, x + 16, y + 16 + idx * 40);
     });
     ctx.restore();
   }
@@ -990,10 +957,8 @@
       drawDefaultScene();
     }
 
-    // Incense burner & rising smoke
-    drawIncensePotAndSmoke();
+    drawIncenseSmoke();
 
-    // Falling golden leaves
     ctx.fillStyle = 'rgba(253, 224, 71, 0.55)';
     for (const p of leafParticles) {
       ctx.beginPath();
@@ -1001,7 +966,6 @@
       ctx.fill();
     }
 
-    // Seated devotees sorted back-to-front
     const sortedSeats = [...seats].sort((a, b) => a.y - b.y);
     for (const s of sortedSeats) {
       if (s.occupant) {
@@ -1009,7 +973,6 @@
       }
     }
 
-    // Active walking / worshipping devotee
     if (activeWalker) {
       const w = activeWalker;
       const pose = w.phase === 'worship' ? 'bow' : 'walk';
@@ -1027,7 +990,6 @@
   }
   loop();
 
-  // --- HANDLE TIKTOK LIVE EVENTS ---
   function handleIncomingEvent(data) {
     if (data.type === 'join') {
       enqueueAction('join', data);
@@ -1039,19 +1001,13 @@
       else if (txt.includes('ဆီမီး')) enqueueAction('offer', data, 'lamp', 'ဆီမီးပူဇော်သည်');
     } else if (data.type === 'gift' && state.giftsEnabled) {
       const g = (data.giftName || '').toLowerCase();
-      if (g.includes('rose')) {
-        enqueueAction('offer', data, 'flower', `Rose (${data.repeatCount}x) ပန်းကပ်လှူသည်`);
-      } else if (g.includes('ice cream')) {
-        enqueueAction('offer', data, 'water', `Ice Cream (${data.repeatCount}x) ရေချမ်းကပ်သည်`);
-      } else if (g.includes('gg')) {
-        enqueueAction('offer', data, 'fruit', `GG (${data.repeatCount}x) သစ်သီးလှူသည်`);
-      } else {
-        enqueueAction('offer', data, 'lamp', `${data.giftName} (${data.repeatCount}x) ကပ်လှူသည်`);
-      }
+      if (g.includes('rose')) enqueueAction('offer', data, 'flower', `Rose (${data.repeatCount}x) ပန်းကပ်လှူသည်`);
+      else if (g.includes('ice cream')) enqueueAction('offer', data, 'water', `Ice Cream (${data.repeatCount}x) ရေချမ်းကပ်သည်`);
+      else if (g.includes('gg')) enqueueAction('offer', data, 'fruit', `GG (${data.repeatCount}x) သစ်သီးလှူသည်`);
+      else enqueueAction('offer', data, 'lamp', `${data.giftName} (${data.repeatCount}x) ကပ်လှူသည်`);
     }
   }
 
-  // --- WEBSOCKET CONNECTION ---
   let socket = null;
   const wsStatus = document.getElementById('wsStatus');
   const connectBtn = document.getElementById('connectBtn');
@@ -1110,7 +1066,6 @@
     socket.onclose = () => setStatus('', 'Offline');
   });
 
-  // --- UI & DOUBLE-TAP CONTROLS ---
   const modal = document.getElementById('controlModal');
   function toggleModal() {
     ensureAudioCtx();
@@ -1135,6 +1090,9 @@
       const key = sw.dataset.key;
       state[key] = !state[key];
       sw.classList.toggle('on', state[key]);
+      if (key === 'initialCrowdEnabled') {
+        initSeats(state.initialCrowdEnabled);
+      }
     });
   });
 
@@ -1181,7 +1139,7 @@
   });
 
   document.getElementById('restartSeatsBtn').addEventListener('click', () => {
-    initSeats();
+    initSeats(state.initialCrowdEnabled);
     activeWalker = null;
     actionQueue.length = 0;
   });
@@ -1193,7 +1151,10 @@
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const img = new Image();
-    img.onload = () => { state.customBg = img; };
+    img.onload = () => {
+      state.customBg = img;
+      document.getElementById('pickBgBtn').classList.add('loaded');
+    };
     img.src = URL.createObjectURL(file);
   });
 
