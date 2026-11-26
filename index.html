@@ -8,15 +8,14 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: "Pyidaungsu", "Myanmar3", sans-serif;
-      background: #1a120b;
-      color: #fff;
+      background: #140f0a;
+      color: #f5f0e6;
       overflow: hidden;
       height: 100vh;
       width: 100vw;
       position: relative;
     }
 
-    /* နောက်ခံ ဘုရားခန်းပုံ (Repo ထဲရှိ ကိုယ့်ပုံဖိုင်နာမည်နှင့် ကိုက်ညီအောင် ပြင်နိုင်ပါသည်) */
     #bgLayer {
       position: absolute;
       inset: 0;
@@ -24,7 +23,7 @@
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      background-color: #2b1d0e;
+      background-color: #23180e;
       z-index: 1;
     }
 
@@ -32,12 +31,12 @@
       position: absolute;
       top: 14px;
       right: 14px;
-      z-index: 50;
-      width: 40px;
-      height: 40px;
+      z-index: 60;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       border: 1.5px solid #e6c27a;
-      background: rgba(25, 20, 15, 0.85);
+      background: rgba(22, 17, 12, 0.88);
       color: #ffd97d;
       font-size: 18px;
       cursor: pointer;
@@ -45,7 +44,7 @@
 
     .top-panels {
       position: absolute;
-      top: 64px;
+      top: 66px;
       left: 10px;
       right: 10px;
       z-index: 10;
@@ -56,19 +55,18 @@
     }
 
     .info-box {
-      width: 48%;
-      background: rgba(18, 15, 12, 0.78);
+      width: 48.5%;
+      background: rgba(16, 13, 10, 0.82);
       border: 1px solid rgba(255, 215, 120, 0.45);
       border-radius: 10px;
       padding: 8px 10px;
-      font-size: 12px;
-      line-height: 1.55;
-      backdrop-filter: blur(3px);
+      font-size: 11.5px;
+      line-height: 1.5;
     }
 
     .info-box h4 {
       color: #ffd97d;
-      font-size: 12.5px;
+      font-size: 12px;
       margin-bottom: 4px;
       border-bottom: 1px solid rgba(255, 215, 120, 0.25);
       padding-bottom: 3px;
@@ -77,24 +75,24 @@
     .gift-row {
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-bottom: 3px;
+      gap: 5px;
+      margin-bottom: 2px;
     }
 
     .gift-row img {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       object-fit: contain;
     }
 
-    /* အလယ်စာတန်းပြေး (ဘယ်ဘက်မှ "ဓမ္မ..." အရင်ထွက်ပြီး ညာဘက်သို့ ရွေ့မည်) */
-    .marquee-wrap {
+    /* Live Title Banner (ဘယ်ဘက်မှ "ဓမ္မသဘင်" အရင်ထွက်ပြီး ညာဘက်သို့ ရွေ့မည်) */
+    #titleBannerWrap {
       position: absolute;
-      top: 46%;
+      top: 47%;
       left: 12px;
       right: 12px;
-      height: 46px;
-      background: rgba(15, 12, 10, 0.82);
+      height: 44px;
+      background: rgba(15, 12, 10, 0.85);
       border: 1.5px solid #d4af37;
       border-radius: 10px;
       overflow: hidden;
@@ -105,41 +103,43 @@
     }
 
     .marquee-track {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       white-space: nowrap;
       will-change: transform;
-      animation: slideLeftToRight 15s linear infinite;
+      animation: dhammaLeftToRight 14s linear infinite;
     }
 
     .marquee-text {
       display: inline-block;
-      font-size: 17px;
+      font-size: 16.5px;
       font-weight: bold;
       color: #ffe28a;
       text-shadow: 0 1px 4px #000;
-      padding: 0 24px;
+      padding: 0 16px;
     }
 
-    @keyframes slideLeftToRight {
+    @keyframes dhammaLeftToRight {
       0% {
         transform: translateX(-100%);
       }
       100% {
-        transform: translateX(100%);
+        transform: translateX(100vw);
       }
     }
 
     #audienceArea {
       position: absolute;
-      bottom: 15px;
+      bottom: 12px;
       left: 10px;
       right: 10px;
-      height: 42%;
+      height: 41%;
       z-index: 12;
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 4px 8px;
+      align-items: end;
       pointer-events: none;
     }
 
@@ -149,22 +149,22 @@
       align-items: center;
       justify-content: flex-end;
       position: relative;
-      animation: fadeInUp 0.6s ease;
     }
 
     .seat-slot img.char-img {
-      width: 68px;
+      width: 54px;
       height: auto;
+      display: block;
     }
 
     .seat-label {
       background: rgba(0, 0, 0, 0.72);
       color: #fff;
-      font-size: 10.5px;
-      padding: 2px 7px;
-      border-radius: 8px;
-      margin-bottom: 2px;
-      max-width: 120px;
+      font-size: 9.5px;
+      padding: 1px 6px;
+      border-radius: 7px;
+      margin-bottom: 1px;
+      max-width: 96px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -173,53 +173,48 @@
     .offering-badge {
       display: flex;
       align-items: center;
-      gap: 3px;
-      background: rgba(255, 215, 100, 0.22);
+      gap: 2px;
+      background: rgba(255, 215, 100, 0.25);
       border: 1px solid #ffd97d;
-      border-radius: 10px;
-      padding: 1px 6px;
-      font-size: 10px;
-      margin-bottom: 2px;
+      border-radius: 8px;
+      padding: 0 5px;
+      font-size: 9px;
+      margin-bottom: 1px;
     }
 
     .offering-badge img {
-      width: 16px;
-      height: 16px;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
+      width: 14px;
+      height: 14px;
     }
 
     #alertBanner {
       position: absolute;
-      top: 34%;
+      top: 35%;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 30;
-      background: rgba(25, 18, 10, 0.92);
+      z-index: 35;
+      background: rgba(22, 16, 10, 0.94);
       border: 1.5px solid #ffd97d;
-      border-radius: 20px;
-      padding: 6px 16px;
+      border-radius: 18px;
+      padding: 6px 14px;
       display: none;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
+      font-size: 12.5px;
       color: #ffe89e;
       white-space: nowrap;
     }
 
     #alertBanner img {
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
     }
 
     #controlPanel {
       position: absolute;
       inset: 0;
       z-index: 100;
-      background: rgba(15, 12, 10, 0.95);
+      background: #141210;
       padding: 16px;
       overflow-y: auto;
       display: none;
@@ -227,60 +222,133 @@
 
     #controlPanel.open { display: block; }
 
-    .panel-header {
+    .panel-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 14px;
-      border-bottom: 1px solid #444;
-      padding-bottom: 8px;
+      border-bottom: 1px solid #2d2924;
+      padding-bottom: 10px;
     }
 
-    .field-group { margin-bottom: 12px; }
-    .field-group label {
-      display: block;
-      font-size: 12px;
-      color: #ffd97d;
-      margin-bottom: 4px;
+    .card-box {
+      background: #1d1a16;
+      border: 1px solid #2e2923;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
     }
-    .field-group input {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #555;
-      background: #222;
-      color: #fff;
+
+    .card-title {
+      font-size: 12.5px;
+      color: #e5dfd3;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid #29241f;
       font-size: 13px;
     }
 
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
+    .toggle-row:last-child { border-bottom: none; }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
     }
 
-    button.action-btn {
-      padding: 8px 12px;
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #3a352f;
+      transition: 0.25s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      transition: 0.25s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider { background-color: #e0a82e; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .input-dark {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #35302a;
+      background: #24201b;
+      color: #f5f0e6;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .btn-connect {
+      width: 100%;
+      padding: 11px;
       border: none;
-      border-radius: 6px;
-      background: #d4af37;
-      color: #111;
+      border-radius: 8px;
+      background: #10b981;
+      color: #072219;
       font-weight: bold;
+      font-size: 13.5px;
+      cursor: pointer;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .test-btn {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #38332c;
+      background: #24201b;
+      color: #f5f0e6;
       font-size: 12.5px;
       cursor: pointer;
     }
 
-    button.secondary-btn {
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
+    .done-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      background: #d4af37;
+      color: #141210;
+      font-weight: bold;
+      cursor: pointer;
     }
 
-    #statusLog {
+    #statusBox {
       margin-top: 8px;
-      font-size: 12px;
-      color: #7dff9b;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(239, 68, 68, 0.14);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #fca5a5;
+      font-size: 11.5px;
+      word-break: break-word;
+      display: none;
     }
   </style>
 </head>
@@ -290,7 +358,7 @@
   <button id="menuToggle" title="Settings">☰</button>
 
   <div class="top-panels">
-    <div class="info-box">
+    <div class="info-box" id="guideBox">
       <h4>🎁 ကုသိုလ်ပြု ကပ်လှူရန် (TikTok Gifts)</h4>
       <div class="gift-row">
         <img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png" alt="Rose" onerror="this.style.display='none'">
@@ -319,7 +387,7 @@
     </div>
   </div>
 
-  <div class="marquee-wrap">
+  <div id="titleBannerWrap">
     <div class="marquee-track">
       <span class="marquee-text" id="marqueeDisplay">
         ဓမ္မသဘင် (အမွေခံထိုက်သူဖြစ်ပါစေ) တရားတော်
@@ -335,89 +403,161 @@
   <div id="audienceArea"></div>
 
   <div id="controlPanel">
-    <div class="panel-header">
-      <h3>⚙️ ဓမ္မသဘင် Live ထိန်းချုပ်ခန်း</h3>
-      <button class="action-btn" id="doneBtn">✓ Done</button>
+    <div class="panel-top">
+      <h3>⚙️ ဓမ္မသဘင် ထိန်းချုပ်ခန်း</h3>
+      <button class="done-btn" id="doneBtn">✓ Done</button>
     </div>
 
-    <div class="field-group">
-      <label>TikTok Username (@ မထည့်လည်း ရပါသည်)</label>
-      <input type="text" id="tiktokUserInput" placeholder="ဥပမာ - htoolay4786" />
+    <div class="card-box">
+      <div class="toggle-row">
+        <span>🔔 Temple Bell & Ambience</span>
+        <label class="switch">
+          <input type="checkbox" id="bellToggle" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>🏷️ Live Title Banner</span>
+        <label class="switch">
+          <input type="checkbox" id="bannerToggle" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>📖 Viewer Guide Box</span>
+        <label class="switch">
+          <input type="checkbox" id="guideToggle" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
     </div>
 
-    <div class="field-group">
-      <label>WebSocket Server URL (wss://)</label>
-      <input type="text" id="wsUrlInput" value="wss://dhamma-live-server.onrender.com" />
+    <div class="card-box">
+      <div class="card-title">📝 Live ခေါင်းစဉ်စာသား</div>
+      <input type="text" class="input-dark" id="marqueeInput" value="ဓမ္မသဘင် (အမွေခံထိုက်သူဖြစ်ပါစေ) တရားတော်" />
+      <div class="card-title" style="margin-top:6px;">🖼️ နောက်ခံပုံ / ဇာတ်ကောင်ပုံ / တရား MP3</div>
+      <input type="file" class="input-dark" id="bgFileInput" accept="image/*" />
+      <input type="file" class="input-dark" id="charFileInput" accept="image/*" />
+      <input type="file" class="input-dark" id="audioFileInput" accept="audio/*" />
+      <audio id="dhammaAudio" controls style="width:100%;"></audio>
     </div>
 
-    <div class="field-group">
-      <label>အလယ်စာတန်းပြေး စာသား</label>
-      <input type="text" id="marqueeInput" value="ဓမ္မသဘင် (အမွေခံထိုက်သူဖြစ်ပါစေ) တရားတော်" />
+    <div class="card-box">
+      <div class="card-title">🎵 TikTok LIVE ချိတ်ဆက်ရန်</div>
+      <input type="text" class="input-dark" id="wsUrlInput" value="wss://dhamma-live-server.onrender.com/" />
+      <input type="text" class="input-dark" id="tiktokUserInput" value="@htoolay4786" placeholder="@username" />
+      <button class="btn-connect" id="connectBtn">Connect TikTok LIVE</button>
+      <div id="statusBox"></div>
     </div>
 
-    <div class="field-group">
-      <label>နောက်ခံ ဘုရားခန်းပုံ (Background Image)</label>
-      <input type="file" id="bgFileInput" accept="image/*" />
+    <div class="card-box">
+      <div class="card-title">🧪 စမ်းသပ်ရန် (Test Simulator)</div>
+      <div class="test-grid">
+        <button class="test-btn" id="testJoinBtn">🙏 Test Join</button>
+        <button class="test-btn" id="testRoseBtn">🌹 Test Rose (ပန်း)</button>
+        <button class="test-btn" id="testWaterBtn">🥥 Test Coconut (ရေချမ်း)</button>
+        <button class="test-btn" id="resetSeatsBtn">♻️ ပရိသတ်ပုံစံပြန်ညှိရန်</button>
+      </div>
     </div>
-
-    <div class="field-group">
-      <label>တရားထိုင် ဇာတ်ကောင်ပုံ (Character PNG)</label>
-      <input type="file" id="charFileInput" accept="image/*" />
-    </div>
-
-    <div class="field-group">
-      <label>တရားတော် MP3 အသံဖိုင်</label>
-      <input type="file" id="audioFileInput" accept="audio/*" />
-      <audio id="dhammaAudio" controls style="width:100%; margin-top:6px;"></audio>
-    </div>
-
-    <div class="btn-row">
-      <button class="action-btn" id="connectBtn">🔗 Connect TikTok Live</button>
-      <button class="action-btn secondary-btn" id="testJoinBtn">🙏 Test Join</button>
-      <button class="action-btn secondary-btn" id="testRoseBtn">🌹 Test Rose</button>
-      <button class="action-btn secondary-btn" id="testWaterBtn">🥥 Test Coconut</button>
-      <button class="action-btn secondary-btn" id="clearSeatsBtn">🧹 နေရာရှင်းရန်</button>
-    </div>
-
-    <div id="statusLog">Status: Ready</div>
   </div>
 
   <script>
     const controlPanel = document.getElementById('controlPanel');
     const menuToggle = document.getElementById('menuToggle');
     const doneBtn = document.getElementById('doneBtn');
-    const tiktokUserInput = document.getElementById('tiktokUserInput');
-    const wsUrlInput = document.getElementById('wsUrlInput');
+    const titleBannerWrap = document.getElementById('titleBannerWrap');
+    const guideBox = document.getElementById('guideBox');
     const marqueeInput = document.getElementById('marqueeInput');
     const marqueeDisplay = document.getElementById('marqueeDisplay');
+    const wsUrlInput = document.getElementById('wsUrlInput');
+    const tiktokUserInput = document.getElementById('tiktokUserInput');
     const audienceArea = document.getElementById('audienceArea');
     const recentLogs = document.getElementById('recentLogs');
-    const statusLog = document.getElementById('statusLog');
+    const statusBox = document.getElementById('statusBox');
     const alertBanner = document.getElementById('alertBanner');
     const alertIcon = document.getElementById('alertIcon');
     const alertText = document.getElementById('alertText');
 
     let characterSrc = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-        <circle cx="60" cy="24" r="14" fill="#222"/>
-        <circle cx="60" cy="30" r="8" fill="#111"/>
-        <path d="M35 45 Q60 38 85 45 L90 78 L30 78 Z" fill="#ffffff" stroke="#333" stroke-width="2"/>
-        <ellipse cx="60" cy="88" rx="36" ry="16" fill="#6b2737" stroke="#333" stroke-width="2"/>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="20" r="12" fill="#221c18"/>
+        <circle cx="50" cy="25" r="7" fill="#120f0d"/>
+        <path d="M28 40 Q50 33 72 40 L76 68 L24 68 Z" fill="#f7f4ed" stroke="#333" stroke-width="2"/>
+        <ellipse cx="50" cy="76" rx="30" ry="13" fill="#6d2332" stroke="#333" stroke-width="2"/>
       </svg>
     `);
 
+    const defaultSitters = [
+      { id: 's1', name: 'ဥပသကာ ၁' },
+      { id: 's2', name: 'ဥပသိကာမ ၁' },
+      { id: 's3', name: 'ဥပသကာ ၂' },
+      { id: 's4', name: 'ဥပသိကာမ ၂' },
+      { id: 's5', name: 'ဓမ္မမိတ်ဆွေ' },
+      { id: 's6', name: 'တရားနာဧည့်သည်' }
+    ];
+
     const seats = new Map();
-    const MAX_SEATS = 12;
+    const MAX_SEATS = 9;
     let ws = null;
     let alertTimer = null;
 
-    tiktokUserInput.value = localStorage.getItem('dhamma_tiktok_user') || '';
+    tiktokUserInput.value = localStorage.getItem('dhamma_tiktok_user') || '@htoolay4786';
     const savedWs = localStorage.getItem('dhamma_ws_url');
     if (savedWs) wsUrlInput.value = savedWs;
 
+    function showStatus(msg, isError = false) {
+      statusBox.style.display = 'block';
+      statusBox.textContent = msg;
+      statusBox.style.background = isError ? 'rgba(239, 68, 68, 0.16)' : 'rgba(16, 185, 129, 0.16)';
+      statusBox.style.borderColor = isError ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)';
+      statusBox.style.color = isError ? '#fca5a5' : '#6ee7b7';
+    }
+
+    function seatUser(uniqueId, nickname, giftInfo = null) {
+      let slot = seats.get(uniqueId);
+
+      if (!slot) {
+        if (seats.size >= MAX_SEATS) {
+          const oldestKey = seats.keys().next().value;
+          const oldestEl = seats.get(oldestKey);
+          if (oldestEl) oldestEl.remove();
+          seats.delete(oldestKey);
+        }
+
+        slot = document.createElement('div');
+        slot.className = 'seat-slot';
+        slot.innerHTML = `
+          <div class="offering-slot"></div>
+          <div class="seat-label">${nickname}</div>
+          <img class="char-img" src="${characterSrc}" alt="Meditator" />
+        `;
+        audienceArea.appendChild(slot);
+        seats.set(uniqueId, slot);
+      }
+
+      if (giftInfo) {
+        const offeringSlot = slot.querySelector('.offering-slot');
+        const imgTag = giftInfo.giftPictureUrl
+          ? `<img src="${giftInfo.giftPictureUrl}" alt="${giftInfo.giftName}" />`
+          : '🎁';
+        offeringSlot.innerHTML = `<div class="offering-badge">${imgTag}<span>${giftInfo.giftName}</span></div>`;
+      }
+    }
+
+    function initDefaultAudience() {
+      seats.clear();
+      audienceArea.innerHTML = '';
+      defaultSitters.forEach(person => seatUser(person.id, person.name));
+    }
+
+    initDefaultAudience();
+
     menuToggle.onclick = () => controlPanel.classList.add('open');
+
     doneBtn.onclick = () => {
       marqueeDisplay.textContent = marqueeInput.value.trim() || 'ဓမ္မသဘင် (အမွေခံထိုက်သူဖြစ်ပါစေ) တရားတော်';
+      titleBannerWrap.style.display = document.getElementById('bannerToggle').checked ? 'flex' : 'none';
+      guideBox.style.display = document.getElementById('guideToggle').checked ? 'block' : 'none';
       localStorage.setItem('dhamma_tiktok_user', tiktokUserInput.value.trim());
       localStorage.setItem('dhamma_ws_url', wsUrlInput.value.trim());
       controlPanel.classList.remove('open');
@@ -483,43 +623,12 @@
       return `${giftName} ကပ်လှူသည်`;
     }
 
-    function seatUser(uniqueId, nickname, giftInfo = null) {
-      let slot = seats.get(uniqueId);
-
-      if (!slot) {
-        if (seats.size >= MAX_SEATS) {
-          const oldestKey = seats.keys().next().value;
-          const oldestEl = seats.get(oldestKey);
-          if (oldestEl) oldestEl.remove();
-          seats.delete(oldestKey);
-        }
-
-        slot = document.createElement('div');
-        slot.className = 'seat-slot';
-        slot.innerHTML = `
-          <div class="offering-slot"></div>
-          <div class="seat-label">${nickname}</div>
-          <img class="char-img" src="${characterSrc}" alt="Meditator" />
-        `;
-        audienceArea.appendChild(slot);
-        seats.set(uniqueId, slot);
-      }
-
-      if (giftInfo) {
-        const offeringSlot = slot.querySelector('.offering-slot');
-        const imgTag = giftInfo.giftPictureUrl
-          ? `<img src="${giftInfo.giftPictureUrl}" alt="${giftInfo.giftName}" />`
-          : '🎁';
-        offeringSlot.innerHTML = `<div class="offering-badge">${imgTag}<span>${giftInfo.giftName}</span></div>`;
-      }
-    }
-
     document.getElementById('connectBtn').onclick = () => {
       const username = tiktokUserInput.value.trim();
       const wsUrl = wsUrlInput.value.trim();
 
       if (!username) {
-        statusLog.textContent = 'Status: ကျေးဇူးပြု၍ TikTok Username အရင်ထည့်ပါ';
+        showStatus('TikTok Username ထည့်ပေးပါ', true);
         return;
       }
 
@@ -530,7 +639,7 @@
         try { ws.close(); } catch (_) {}
       }
 
-      statusLog.textContent = 'Status: Connecting to server...';
+      showStatus(`Connecting to ${username}...`, false);
       ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
@@ -539,13 +648,14 @@
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-
-        if (data.type === 'status' || data.type === 'error') {
-          statusLog.textContent = `Status: ${data.message}`;
+        if (data.type === 'error') {
+          showStatus(data.message, true);
+        } else if (data.type === 'status') {
+          showStatus(data.message, false);
         } else if (data.type === 'join') {
           seatUser(data.uniqueId, data.nickname);
           addLog(`🙏 ${data.nickname} ဘုရားရှိခိုးသည်`);
-          showBanner(`🙏 ${data.nickname} ဓမ္မသဘင်သို့ ကြွရောက်လာပါသည်`);
+          showBanner(`🙏 ${data.nickname} ကြွရောက်လာပါသည်`);
         } else if (data.type === 'chat') {
           seatUser(data.uniqueId, data.nickname);
           addLog(`💬 ${data.nickname}: ${data.comment}`);
@@ -558,36 +668,35 @@
       };
 
       ws.onerror = () => {
-        statusLog.textContent = 'Status: WebSocket error (Server link စစ်ဆေးပါ)';
+        showStatus('WebSocket connection error', true);
       };
     };
 
-    let testCounter = 1;
+    let testIdx = 1;
     document.getElementById('testJoinBtn').onclick = () => {
-      const id = `guest_${testCounter++}`;
-      seatUser(id, `ဓမ္မမိတ်ဆွေ ${testCounter - 1}`);
-      addLog(`🙏 ဓမ္မမိတ်ဆွေ ${testCounter - 1} ဘုရားရှိခိုးသည်`);
-      showBanner(`🙏 ဓမ္မမိတ်ဆွေ ${testCounter - 1} နေရာယူပါသည်`);
+      const name = `ဧည့်သည် ${testIdx++}`;
+      seatUser(`test_${Date.now()}_${testIdx}`, name);
+      addLog(`🙏 ${name} ဘုရားရှိခိုးသည်`);
+      showBanner(`🙏 ${name} နေရာယူပါသည်`);
     };
 
     document.getElementById('testRoseBtn').onclick = () => {
       const roseImg = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
-      seatUser('test_rose', 'မအေးအေး', { giftName: 'Rose', giftPictureUrl: roseImg });
+      seatUser('test_rose_user', 'မအေးအေး', { giftName: 'Rose', giftPictureUrl: roseImg });
       addLog('🌹 မအေးအေး - ပန်းကပ်လှူသည်');
       showBanner('မအေးအေး မှ ပန်းကပ်လှူသည် (Rose)', roseImg);
     };
 
     document.getElementById('testWaterBtn').onclick = () => {
       const cocoImg = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/resource/f600a2495ab5d250e7dabe963412162b.png~tplv-obj.png';
-      seatUser('test_water', 'ကိုကျော်ကျော်', { giftName: 'Coconut Drink', giftPictureUrl: cocoImg });
+      seatUser('test_coco_user', 'ကိုကျော်ကျော်', { giftName: 'Coconut Drink', giftPictureUrl: cocoImg });
       addLog('🥥 ကိုကျော်ကျော် - ရေချမ်းကပ်လှူသည်');
       showBanner('ကိုကျော်ကျော် မှ ရေချမ်းကပ်လှူသည် (Coconut Drink)', cocoImg);
     };
 
-    document.getElementById('clearSeatsBtn').onclick = () => {
-      seats.clear();
-      audienceArea.innerHTML = '';
-      statusLog.textContent = 'Status: နေရာအားလုံး ရှင်းလင်းပြီးပါပြီ';
+    document.getElementById('resetSeatsBtn').onclick = () => {
+      initDefaultAudience();
+      showStatus('တရားနာပရိသတ် ဇာတ်ကောင်များ ပြန်ညှိပြီးပါပြီ', false);
     };
   </script>
 </body>
