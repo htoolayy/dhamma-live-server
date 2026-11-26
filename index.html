@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Dhamma Live Studio Pro</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #0b0d12; font-family: 'Pyidaungsu', 'Myanmar Text', system-ui, sans-serif;
+      touch-action: manipulation;
+    }
+    #app {
+      position: relative; width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: #000;
+    }
+    canvas {
+      display: block; width: 100%; height: 100%; object-fit: cover;
+    }
+
+    #menuBtn {
+      position: absolute; bottom: 18px; right: 18px; z-index: 20;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(20, 22, 28, 0.72); border: 1.5px solid #e6b84c;
+      color: #f6d365; font-size: 20px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; backdrop-filter: blur(6px);
+    }
+
+    #controlModal {
+      position: absolute; inset: 0; z-index: 50;
+      background: rgba(0, 0, 0, 0.68); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; padding: 14px;
+    }
+    #controlModal.open { display: flex; }
+    .panel {
+      width: 100%; max-width: 400px; max-height: 92vh; overflow-y: auto;
+      background: #181a20; border: 1.5px solid #d4a644; border-radius: 18px;
+      padding: 14px; color: #f3f4f6; box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+    }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #2c303a;
+    }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-weight: 700; font-size: 13px; color: #f87171;
+    }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
+    .track-name {
+      font-size: 12px; color: #fbbf24; margin-bottom: 10px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .btn-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+    }
+    .ctrl-btn {
+      background: #252832; border: 1px solid #373c4a; color: #fff;
+      padding: 9px 8px; border-radius: 11px; font-size: 12.5px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .ctrl-btn:active { transform: scale(0.97); }
+    .ctrl-btn.loaded { border-color: #10b981; background: #132a24; color: #6ee7b7; }
+
+    .slider-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: #20232c; padding: 8px 10px; border-radius: 10px; margin-bottom: 7px;
+      font-size: 12px;
+    }
+    .slider-row input[type="range"] { flex: 1; accent-color: #eab308; }
+
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #20232c; padding: 8px 12px; border-radius: 10px; margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .switch {
+      position: relative; width: 42px; height: 22px; background: #374151;
+      border-radius: 999px; cursor: pointer; transition: 0.2s;
+    }
+    .switch.on { background: #eab308; }
+    .switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: 0.2s;
+    }
+    .switch.on::after { left: 22px; }
+
+    .section-box {
+      background: #121419; border: 1px solid #2d313d; border-radius: 12px;
+      padding: 10px; margin-top: 9px;
+    }
+    .section-title {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; font-weight: 700; color: #e5e7eb; margin-bottom: 8px;
+    }
+    .status-pill {
+      font-size: 11px; padding: 2px 8px; border-radius: 999px;
+      background: #374151; color: #d1d5db;
+    }
+    .status-pill.connected { background: #065f46; color: #6ee7b7; }
+    .status-pill.connecting { background: #92400e; color: #fde68a; }
+    .status-pill.error { background: #7f1d1d; color: #fca5a5; }
+
+    .text-input {
+      width: 100%; background: #1f222b; border: 1px solid #3a3f4d; color: #fff;
+      padding: 9px 10px; border-radius: 9px; font-size: 13px; margin-bottom: 8px;
+      outline: none;
+    }
+    .text-input:focus { border-color: #eab308; }
+
+    .connect-btn {
+      width: 100%; padding: 11px; border-radius: 10px; border: none;
+      background: #10b981; color: #052e16; font-weight: 800; font-size: 14px;
+      cursor: pointer;
+    }
+    .connect-btn.disconnect { background: #ef4444; color: #fff; }
+
+    .test-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+    }
+    .test-btn {
+      background: #262a36; border: 1px solid #3f4556; color: #e5e7eb;
+      padding: 7px; border-radius: 8px; font-size: 11px; cursor: pointer;
+    }
+    .done-btn {
+      width: 100%; margin-top: 12px; padding: 11px; border-radius: 12px;
+      background: linear-gradient(135deg, #f59e0b, #d97706); border: none;
+      color: #111827; font-weight: 800; font-size: 14px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <canvas id="stage"></canvas>
+  <button id="menuBtn" title="Settings">☰</button>
+
+  <div id="controlModal">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="live-badge"><span class="live-dot"></span> DHAMMA LIVE STUDIO</span>
+        <span style="font-size:11px; color:#9ca3af;">Double-tap screen</span>
+      </div>
+
+      <div class="track-name" id="trackLabel">🎵 တရားတော် MP3 မရွေးရသေးပါ</div>
+
+      <div class="btn-grid">
+        <button class="ctrl-btn" id="playPauseBtn">▶ Play</button>
+        <button class="ctrl-btn" id="restartSeatsBtn">↻ Reset Seats</button>
+        <button class="ctrl-btn" id="pickAudioBtn">📂 + တရား MP3</button>
+        <button class="ctrl-btn" id="pickBgBtn">🖼️ နောက်ခံပုံပြောင်း</button>
+      </div>
+      <input type="file" id="audioInput" accept="audio/*" multiple hidden />
+      <input type="file" id="bgInput" accept="image/*" hidden />
+
+      <!-- PNG Character Sprites Picker -->
+      <div class="section-box">
+        <div class="section-title">
+          <span>🧍 PNG ဇာတ်ကောင်ပုံများ (Transparent PNG)</span>
+        </div>
+        <div class="btn-grid" style="margin-bottom:6px;">
+          <button class="ctrl-btn" id="btnMaleWalk">🚶 အမျိုးသား လျှောက်</button>
+          <button class="ctrl-btn" id="btnMaleKneel">🙏 အမျိုးသား ထိုင်</button>
+          <button class="ctrl-btn" id="btnFemaleWalk">🚶‍♀️ အမျိုးသမီး လျှောက်</button>
+          <button class="ctrl-btn" id="btnFemaleKneel">🙏 အမျိုးသမီး ထိုင်</button>
+        </div>
+        <input type="file" id="spriteInput" accept="image/png,image/webp,image/*" hidden />
+        <div class="slider-row" style="margin-bottom:0;">
+          <span>📏 ဇာတ်ကောင် အရွယ်</span>
+          <input type="range" id="charScaleSlider" min="0.5" max="1.8" step="0.05" value="1.0" />
+        </div>
+      </div>
+
+      <div class="slider-row" style="margin-top:9px;">
+        <span>🎵 Song Vol</span>
+        <input type="range" id="songVol" min="0" max="1" step="0.05" value="0.8" />
+      </div>
+      <div class="slider-row">
+        <span>🔔 SFX Vol</span>
+        <input type="range" id="sfxVol" min="0" max="1" step="0.05" value="0.85" />
+      </div>
+
+      <div class="toggle-row">
+        <span>✨ ရောင်ခြည်တန်း (Light Rays)</span>
+        <div class="switch on" data-key="raysEnabled"></div>
+      </div>
+      <div class="toggle-row">
+        <span>💨 အမွှေးတိုင်မီးခိုး (Incense Smoke)</span>
+        <div class="switch on" data-key="smokeEnabled"></div>
+      </div>
+      <div class="toggle-row">
+        <span>💬 Comment Actions</span>
+        <div class="switch on" data-key="commentsEnabled"></div>
+      </div>
+      <div class="toggle-row">
+        <span>🎁 Gift Actions</span>
+        <div class="switch on" data-key="giftsEnabled"></div>
+      </div>
+      <div class="toggle-row">
+        <span>🔔 Temple Bell & Ambience</span>
+        <div class="switch on" data-key="ambienceEnabled"></div>
+      </div>
+      <div class="toggle-row">
+        <span>🏷️ Live Title Banner</span>
+        <div class="switch on" data-key="titleEnabled"></div>
+      </div>
+      <div class="toggle-row">
+        <span>📋 Viewer Guide Box</span>
+        <div class="switch on" data-key="guideEnabled"></div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title"><span>📝 Live ခေါင်းစဉ်စာသား</span></div>
+        <input type="text" class="text-input" id="liveTitleInput" value="တိုက်ရိုက် ဓမ္မသဘင်" style="margin-bottom:0;" />
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">
+          <span>🎵 TikTok LIVE ချိတ်ဆက်ရန်</span>
+          <span class="status-pill" id="wsStatus">Offline</span>
+        </div>
+        <input type="text" class="text-input" id="wsUrlInput" placeholder="wss://your-server.onrender.com" />
+        <input type="text" class="text-input" id="usernameInput" placeholder="@username (ဥပမာ - alfunmyanmar)" />
+        <button class="connect-btn" id="connectBtn">Connect TikTok LIVE</button>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title"><span>🧪 စမ်းသပ်ရန် (Test Simulator)</span></div>
+        <div class="test-grid">
+          <button class="test-btn" onclick="simJoin()">🙏 Test Join</button>
+          <button class="test-btn" onclick="simGift('Rose')">🌹 Test Rose (ပန်း)</button>
+          <button class="test-btn" onclick="simGift('Ice Cream Cone')">🍦 Test Ice Cream (ရေ)</button>
+          <button class="test-btn" onclick="simGift('GG')">🎮 Test GG (သစ်သီး)</button>
+        </div>
+      </div>
+
+      <button class="done-btn" id="doneBtn">✓ Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+
+  // Cross-browser rounded rectangle helper (works on older iOS Safari too)
+  function drawRoundRect(x, y, w, h, r) {
+    const radius = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radius);
+    ctx.arcTo(x + w, y + h, x, y + h, radius);
+    ctx.arcTo(x, y + h, x, y, radius);
+    ctx.arcTo(x, y, x + w, y, radius);
+    ctx.closePath();
+  }
+
+  const W = 1080;
+  const H = 1920;
+  canvas.width = W;
+  canvas.height = H;
+
+  const state = {
+    raysEnabled: true,
+    smokeEnabled: true,
+    commentsEnabled: true,
+    giftsEnabled: true,
+    ambienceEnabled: true,
+    titleEnabled: true,
+    guideEnabled: true,
+    liveTitle: localStorage.getItem('dhamma_title') || 'တိုက်ရိုက် ဓမ္မသဘင်',
+    wsUrl: localStorage.getItem('dhamma_ws') || '',
+    username: localStorage.getItem('dhamma_user') || '',
+    songVolume: 0.8,
+    sfxVolume: 0.85,
+    charScale: parseFloat(localStorage.getItem('dhamma_char_scale') || '1.0'),
+    customBg: null
+  };
+
+  document.getElementById('liveTitleInput').value = state.liveTitle;
+  document.getElementById('wsUrlInput').value = state.wsUrl;
+  document.getElementById('usernameInput').value = state.username;
+  document.getElementById('charScaleSlider').value = state.charScale;
+
+  // --- PNG SPRITES LOADER (Auto-loads assets/*.png or Phone File Picker) ---
+  const sprites = {
+    maleWalk: null,
+    maleKneel: null,
+    femaleWalk: null,
+    femaleKneel: null,
+    flower: null,
+    water: null,
+    fruit: null,
+    lamp: null
+  };
+
+  const defaultAssetPaths = {
+    maleWalk: 'assets/male_walk.png',
+    maleKneel: 'assets/male_kneel.png',
+    femaleWalk: 'assets/female_walk.png',
+    femaleKneel: 'assets/female_kneel.png',
+    flower: 'assets/flower.png',
+    water: 'assets/water.png',
+    fruit: 'assets/fruit.png',
+    lamp: 'assets/lamp.png'
+  };
+
+  const spriteBtnMap = {
+    maleWalk: 'btnMaleWalk',
+    maleKneel: 'btnMaleKneel',
+    femaleWalk: 'btnFemaleWalk',
+    femaleKneel: 'btnFemaleKneel'
+  };
+
+  function loadSpriteFromSrc(key, src) {
+    const img = new Image();
+    img.onload = () => {
+      sprites[key] = img;
+      const btnId = spriteBtnMap[key];
+      if (btnId) document.getElementById(btnId).classList.add('loaded');
+    };
+    img.onerror = () => { /* Silent fallback to built-in canvas vector character */ };
+    img.src = src;
+  }
+
+  // Try preloading default assets/ PNGs if present in repository
+  Object.entries(defaultAssetPaths).forEach(([key, path]) => {
+    loadSpriteFromSrc(key, path);
+  });
+
+  // Phone File Picker for PNG Character Sprites
+  let activeSpriteSlot = null;
+  const spriteInput = document.getElementById('spriteInput');
+
+  Object.entries(spriteBtnMap).forEach(([slot, btnId]) => {
+    document.getElementById(btnId).addEventListener('click', () => {
+      activeSpriteSlot = slot;
+      spriteInput.value = '';
+      spriteInput.click();
+    });
+  });
+
+  spriteInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !activeSpriteSlot) return;
+    const url = URL.createObjectURL(file);
+    loadSpriteFromSrc(activeSpriteSlot, url);
+  });
+
+  // --- AUDIO SYSTEM ---
+  const audioPlayer = new Audio();
+  let playlist = [];
+  let trackIdx = 0;
+
+  audioPlayer.addEventListener('ended', () => {
+    if (playlist.length > 0) {
+      trackIdx = (trackIdx + 1) % playlist.length;
+      playCurrentTrack();
+    }
+  });
+
+  function playCurrentTrack() {
+    if (!playlist.length) return;
+    const item = playlist[trackIdx];
+    audioPlayer.src = item.url;
+    audioPlayer.volume = state.songVolume;
+    audioPlayer.play().catch(() => {});
+    document.getElementById('trackLabel').textContent = `🎵 (${trackIdx + 1}/${playlist.length}) ${item.name}`;
+    document.getElementById('playPauseBtn').textContent = '⏸ Pause';
+  }
+
+  let audioCtx = null;
+  function ensureAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function playTempleBell(freq = 528, duration = 2.4) {
+    if (state.sfxVolume <= 0.01) return;
+    try {
+      ensureAudioCtx();
+      const now = audioCtx.currentTime;
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(state.sfxVolume * 0.35, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      masterGain.connect(audioCtx.destination);
+
+      [1, 2.0, 2.98].forEach((mult, i) => {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq * mult, now);
+        g.gain.setValueAtTime(1 / (i + 1), now);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + duration);
+      });
+    } catch {}
+  }
+
+  setInterval(() => {
+    if (state.ambienceEnabled && !document.hidden) {
+      playTempleBell(784, 1.8);
+    }
+  }, 16000);
+
+  // --- SEATING GRID (16 Left + 16 Right = 32 Seats) ---
+  const seats = [];
+  function initSeats() {
+    seats.length = 0;
+    const rows = 8;
+    const startY = 890;
+    const endY = 1760;
+
+    for (let r = 0; r < rows; r++) {
+      const t = r / (rows - 1);
+      const y = startY + t * (endY - startY);
+      const perspective = 0.72 + t * 0.36;
+
+      const leftOuterX = 270 - t * 90;
+      const leftInnerX = 415 - t * 55;
+      seats.push({ side: 'L', row: r, col: 0, x: leftOuterX, y, scale: perspective, occupant: null });
+      seats.push({ side: 'L', row: r, col: 1, x: leftInnerX, y, scale: perspective, occupant: null });
+
+      const rightInnerX = 665 + t * 55;
+      const rightOuterX = 810 + t * 90;
+      seats.push({ side: 'R', row: r, col: 0, x: rightInnerX, y, scale: perspective, occupant: null });
+      seats.push({ side: 'R', row: r, col: 1, x: rightOuterX, y, scale: perspective, occupant: null });
+    }
+  }
+  initSeats();
+
+  // --- PARTICLES: GOLDEN LEAVES + INCENSE SMOKE ---
+  const actionQueue = [];
+  let activeWalker = null;
+  const floatingTexts = [];
+  const leafParticles = [];
+  const smokeParticles = [];
+  let rayAngle = 0;
+
+  for (let i = 0; i < 20; i++) {
+    leafParticles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 3 + Math.random() * 4,
+      vy: 0.6 + Math.random() * 1.1,
+      vx: -0.4 + Math.random() * 0.8,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  function spawnSmokeWisp() {
+    // 3 incense sticks located on the altar table at x = W/2, y = 635
+    const stickOffset = (Math.floor(Math.random() * 3) - 1) * 10;
+    smokeParticles.push({
+      x: W / 2 + stickOffset,
+      y: 632,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: -(0.75 + Math.random() * 0.65),
+      radius: 5 + Math.random() * 5,
+      alpha: 0.42 + Math.random() * 0.18,
+      phase: Math.random() * Math.PI * 2,
+      freq: 0.025 + Math.random() * 0.02
+    });
+  }
+
+  function guessFemale(name) {
+    const n = (name || '').trim();
+    if (/^(မ|ဒေါ်|မိ|နန်း|စော|Ma\b|Daw\b|Nan\b|Ei\b|Su\b|May\b|Aye\b|Hnin\b|Thiri\b)/i.test(n)) return true;
+    if (/^(ကို|ဦး|မောင်|စိုင်း|ခွန်|Ko\b|U\b|Mg\b|Sai\b|Min\b|Aung\b|Kyaw\b|Zaw\b)/i.test(n)) return false;
+    return Math.random() < 0.45;
+  }
+
+  function findSeatForUser(uniqueId) {
+    for (const s of seats) {
+      if (s.occupant && s.occupant.uniqueId === uniqueId) return s;
+    }
+    const empty = seats.filter(s => !s.occupant);
+    if (empty.length > 0) return empty[Math.floor(Math.random() * empty.length)];
+    return seats[Math.floor(Math.random() * seats.length)];
+  }
+
+  function enqueueAction(type, user, offeringType = null, label = '') {
+    const uid = user.uniqueId || user.nickname;
+    const isFemale = guessFemale(user.nickname);
+    actionQueue.push({
+      type,
+      uniqueId: uid,
+      nickname: user.nickname || 'Viewer',
+      isFemale,
+      offeringType,
+      label
+    });
+  }
+
+  function processQueue() {
+    if (activeWalker || actionQueue.length === 0) return;
+    const job = actionQueue.shift();
+    const seat = findSeatForUser(job.uniqueId);
+
+    if (seat.occupant && seat.occupant.uniqueId === job.uniqueId) {
+      seat.occupant = null;
+    }
+
+    activeWalker = {
+      ...job,
+      seat,
+      x: W / 2,
+      y: H + 40,
+      targetY: 790,
+      phase: 'walk_up',
+      timer: 0,
+      step: 0
+    };
+
+    if (job.type === 'offer') {
+      playTempleBell(528, 2.5);
+      floatingTexts.push({
+        text: `🙏 ${job.nickname} မှ ${job.label}`,
+        x: W / 2,
+        y: 720,
+        alpha: 1,
+        vy: -0.6
+      });
+    } else {
+      playTempleBell(660, 1.4);
+    }
+  }
+
+  let frameCount = 0;
+  function updateSimulation() {
+    frameCount++;
+    processQueue();
+
+    // Rotate golden light rays slowly
+    if (state.raysEnabled) {
+      rayAngle += 0.0022;
+    }
+
+    // Spawn & update incense smoke
+    if (state.smokeEnabled) {
+      if (frameCount % 6 === 0) spawnSmokeWisp();
+      for (let i = smokeParticles.length - 1; i >= 0; i--) {
+        const sp = smokeParticles[i];
+        sp.phase += sp.freq;
+        sp.x += Math.sin(sp.phase) * 0.85 + sp.vx;
+        sp.y += sp.vy;
+        sp.radius += 0.16;
+        sp.alpha -= 0.0017;
+        if (sp.alpha <= 0 || sp.y < 180) {
+          smokeParticles.splice(i, 1);
+        }
+      }
+    }
+
+    // Update golden leaves
+    for (const p of leafParticles) {
+      p.y += p.vy;
+      p.x += Math.sin(p.phase += 0.02) * 0.7 + p.vx;
+      if (p.y > H) { p.y = -10; p.x = Math.random() * W; }
+      if (p.x < 0) p.x = W;
+      if (p.x > W) p.x = 0;
+    }
+
+    // Update floating banners
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+      const ft = floatingTexts[i];
+      ft.y += ft.vy;
+      ft.alpha -= 0.0045;
+      if (ft.alpha <= 0) floatingTexts.splice(i, 1);
+    }
+
+    // Update active walker
+    if (activeWalker) {
+      const w = activeWalker;
+      w.step += 0.18;
+
+      if (w.phase === 'walk_up') {
+        w.y -= 7.5;
+        if (w.y <= w.targetY) {
+          w.y = w.targetY;
+          w.phase = 'worship';
+          w.timer = 75;
+        }
+      } else if (w.phase === 'worship') {
+        w.timer--;
+        if (w.timer <= 0) w.phase = 'walk_seat';
+      } else if (w.phase === 'walk_seat') {
+        const dx = w.seat.x - w.x;
+        const dy = w.seat.y - w.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 10) {
+          w.seat.occupant = {
+            uniqueId: w.uniqueId,
+            nickname: w.nickname,
+            isFemale: w.isFemale
+          };
+          activeWalker = null;
+        } else {
+          w.x += (dx / dist) * 8;
+          w.y += (dy / dist) * 8;
+        }
+      }
+    }
+  }
+
+  // --- DRAWING FUNCTIONS ---
+  function drawGoldenLightRays() {
+    if (!state.raysEnabled) return;
+    ctx.save();
+    const cx = W / 2;
+    const cy = 395;
+    ctx.translate(cx, cy);
+    ctx.rotate(rayAngle);
+
+    const numRays = 16;
+    const maxRadius = 640;
+
+    // Soft central divine glow
+    const coreGlow = ctx.createRadialGradient(0, 0, 20, 0, 0, 380);
+    coreGlow.addColorStop(0, 'rgba(255, 240, 165, 0.42)');
+    coreGlow.addColorStop(0.5, 'rgba(251, 191, 36, 0.16)');
+    coreGlow.addColorStop(1, 'rgba(251, 191, 36, 0)');
+    ctx.fillStyle = coreGlow;
+    ctx.beginPath();
+    ctx.arc(0, 0, 380, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rotating Sunbeams
+    for (let i = 0; i < numRays; i++) {
+      const a1 = (i / numRays) * Math.PI * 2;
+      const a2 = a1 + (Math.PI / numRays) * 0.72;
+
+      const rayGrad = ctx.createRadialGradient(0, 0, 35, 0, 0, maxRadius);
+      rayGrad.addColorStop(0, 'rgba(254, 240, 138, 0.32)');
+      rayGrad.addColorStop(0.55, 'rgba(245, 158, 11, 0.11)');
+      rayGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+
+      ctx.fillStyle = rayGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a1) * maxRadius, Math.sin(a1) * maxRadius);
+      ctx.lineTo(Math.cos(a2) * maxRadius, Math.sin(a2) * maxRadius);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawIncensePotAndSmoke() {
+    if (!state.smokeEnabled) return;
+
+    // Draw Golden Incense Burner (အမွှေးတိုင်အိုး) on the Altar Table
+    ctx.save();
+    const cx = W / 2;
+    const potY = 665;
+
+    // 3 Incense sticks
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 3;
+    [-9, 0, 9].forEach((dx, idx) => {
+      const topY = 634 - (idx === 1 ? 4 : 0);
+      ctx.beginPath();
+      ctx.moveTo(cx + dx * 0.5, potY - 12);
+      ctx.lineTo(cx + dx, topY);
+      ctx.stroke();
+
+      // Glowing red ember tip
+      ctx.fillStyle = '#ff4500';
+      ctx.beginPath();
+      ctx.arc(cx + dx, topY, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Brass Bowl
+    const bowlGrad = ctx.createLinearGradient(cx - 24, potY - 16, cx + 24, potY);
+    bowlGrad.addColorStop(0, '#fde68a');
+    bowlGrad.addColorStop(0.5, '#d97706');
+    bowlGrad.addColorStop(1, '#92400e');
+    ctx.fillStyle = bowlGrad;
+    drawRoundRect(cx - 22, potY - 16, 44, 16, 6);
+    ctx.fill();
+
+    // Draw Curling Smoke Wisps
+    for (const sp of smokeParticles) {
+      const grad = ctx.createRadialGradient(sp.x, sp.y, 1, sp.x, sp.y, sp.radius);
+      grad.addColorStop(0, `rgba(245, 247, 250, ${sp.alpha})`);
+      grad.addColorStop(0.6, `rgba(226, 232, 240, ${sp.alpha * 0.5})`);
+      grad.addColorStop(1, 'rgba(226, 232, 240, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y, sp.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawDefaultScene() {
+    const sky = ctx.createLinearGradient(0, 0, 0, 820);
+    sky.addColorStop(0, '#132a1c');
+    sky.addColorStop(0.55, '#274c33');
+    sky.addColorStop(1, '#4a6b48');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, 820);
+
+    // Light rays behind the Buddha statue
+    drawGoldenLightRays();
+
+    // Pagoda Spire
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 130);
+    ctx.lineTo(W / 2 - 42, 270);
+    ctx.lineTo(W / 2 + 42, 270);
+    ctx.closePath();
+    ctx.fill();
+
+    // Buddha Statue
+    const goldGrad = ctx.createLinearGradient(W / 2 - 120, 260, W / 2 + 120, 620);
+    goldGrad.addColorStop(0, '#fde68a');
+    goldGrad.addColorStop(0.5, '#f59e0b');
+    goldGrad.addColorStop(1, '#b45309');
+    ctx.fillStyle = goldGrad;
+
+    ctx.beginPath();
+    ctx.arc(W / 2, 320, 44, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(W / 2, 273, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    drawRoundRect(W / 2 - 86, 368, 172, 145, 50);
+    ctx.fill();
+
+    drawRoundRect(W / 2 - 155, 495, 310, 75, 36);
+    ctx.fill();
+
+    // Pedestal & Altar Table
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(W / 2 - 210, 570, 420, 45);
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillRect(W / 2 - 225, 615, 450, 22);
+
+    ctx.fillStyle = '#451a03';
+    ctx.fillRect(W / 2 - 190, 665, 380, 55);
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(W / 2 - 190, 665, 380, 55);
+
+    // Courtyard Floor
+    const floor = ctx.createLinearGradient(0, 720, 0, H);
+    floor.addColorStop(0, '#d6cfc2');
+    floor.addColorStop(1, '#b8ae9c');
+    ctx.fillStyle = floor;
+    ctx.fillRect(0, 720, W, H - 720);
+
+    // Center Walkway
+    ctx.fillStyle = '#e7e1d5';
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 80, 720);
+    ctx.lineTo(W / 2 + 80, 720);
+    ctx.lineTo(W / 2 + 155, H);
+    ctx.lineTo(W / 2 - 155, H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Left & Right Golden Carpets
+    drawCarpet(80, 445, 10, 365);
+    drawCarpet(635, 1000, 715, 1070);
+  }
+
+  function drawCarpet(topL, topR, botL, botR) {
+    ctx.fillStyle = '#f5efe6';
+    ctx.beginPath();
+    ctx.moveTo(topL, 820);
+    ctx.lineTo(topR, 820);
+    ctx.lineTo(botR, H);
+    ctx.lineTo(botL, H);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+  }
+
+  function getCharacterSprite(isFemale, pose) {
+    const isWalking = pose === 'walk';
+    if (isFemale) {
+      return isWalking ? (sprites.femaleWalk || sprites.femaleKneel) : (sprites.femaleKneel || sprites.femaleWalk);
+    } else {
+      return isWalking ? (sprites.maleWalk || sprites.maleKneel) : (sprites.maleKneel || sprites.maleWalk);
+    }
+  }
+
+  function drawDevotee(x, y, baseScale, nickname, isFemale, pose = 'kneel', offering = null, bob = 0) {
+    const finalScale = baseScale * state.charScale;
+    ctx.save();
+    ctx.translate(x, y + bob);
+    ctx.scale(finalScale, finalScale);
+
+    // Ground Contact Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.beginPath();
+    ctx.ellipse(0, 10, 30, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const spriteImg = getCharacterSprite(isFemale, pose);
+    let topAnchorY = pose === 'walk' ? -96 : -82;
+
+    if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
+      // Render Custom PNG Character Sprite anchored at bottom-center (0, 10)
+      const targetHeight = pose === 'walk' ? 145 : 122;
+      const aspect = spriteImg.naturalWidth / spriteImg.naturalHeight;
+      const drawW = targetHeight * aspect;
+      const drawH = targetHeight;
+
+      ctx.save();
+      if (pose === 'bow') {
+        // Gentle bowing motion when paying homage
+        ctx.translate(0, 10);
+        ctx.scale(1.03, 0.91);
+        ctx.translate(0, -10);
+      }
+      ctx.drawImage(spriteImg, -drawW / 2, 10 - drawH, drawW, drawH);
+      ctx.restore();
+
+      topAnchorY = 10 - drawH - 12;
+    } else {
+      // Built-in Vector Character Fallback
+      const longyiColor = isFemale ? '#9d174d' : '#7f1d1d';
+      if (pose === 'kneel' || pose === 'bow') {
+        const bowOffset = pose === 'bow' ? 12 : 0;
+        ctx.fillStyle = longyiColor;
+        drawRoundRect(-22, -16 + bowOffset * 0.4, 44, 28, 10);
+        ctx.fill();
+
+        ctx.fillStyle = '#f8fafc';
+        drawRoundRect(-18, -46 + bowOffset, 36, 34, 10);
+        ctx.fill();
+
+        ctx.fillStyle = '#1f2937';
+        ctx.beginPath();
+        ctx.arc(0, -58 + bowOffset, 14, 0, Math.PI * 2);
+        ctx.fill();
+        if (isFemale) {
+          ctx.beginPath();
+          ctx.arc(0, -72 + bowOffset, 7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        topAnchorY = -86;
+      } else {
+        ctx.fillStyle = longyiColor;
+        drawRoundRect(-16, -28, 32, 38, 6);
+        ctx.fill();
+
+        ctx.fillStyle = '#f8fafc';
+        drawRoundRect(-18, -60, 36, 35, 9);
+        ctx.fill();
+
+        ctx.fillStyle = '#1f2937';
+        ctx.beginPath();
+        ctx.arc(0, -73, 14, 0, Math.PI * 2);
+        ctx.fill();
+        if (isFemale) {
+          ctx.beginPath();
+          ctx.arc(0, -87, 7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        topAnchorY = -102;
+      }
+    }
+
+    // Offering Icon or PNG above character
+    if (offering) {
+      const offImg = sprites[offering];
+      if (offImg && offImg.complete && offImg.naturalWidth > 0) {
+        ctx.drawImage(offImg, -22, topAnchorY - 46, 44, 44);
+      } else {
+        const icons = { flower: '🌸', water: '💧', fruit: '🍎', lamp: '🕯️' };
+        ctx.font = '32px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(icons[offering] || '🎁', 0, topAnchorY - 12);
+      }
+      topAnchorY -= 44;
+    }
+
+    // Floating Name Tag Pill
+    if (nickname) {
+      const label = nickname.length > 14 ? nickname.slice(0, 13) + '…' : nickname;
+      ctx.font = 'bold 17px Pyidaungsu, sans-serif';
+      const tw = ctx.measureText(label).width + 18;
+      const tagY = topAnchorY - 6;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.68)';
+      drawRoundRect(-tw / 2, tagY - 18, tw, 24, 12);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, 0, tagY);
+    }
+
+    ctx.restore();
+  }
+
+  function drawOverlays() {
+    if (state.guideEnabled) {
+      drawGuideCard(32, 175, 375, 225, [
+        '🎁 လက်ဆောင်ကပ်လှူရန်',
+        '🌹 Rose - ပန်းလှူ',
+        '🍦 Ice Cream - ရေချမ်းကပ်',
+        '🎮 GG - သစ်သီးလှူ'
+      ]);
+
+      drawGuideCard(W - 407, 175, 375, 295, [
+        '🙏 Join - ဘုရားရှိခိုး',
+        '💬 Comment ဆုချွေ',
+        '🌸 "ပန်း" - ပန်းလှူ',
+        '💧 "ရေချမ်း" - ရေချမ်းကပ်',
+        '🍎 "သစ်သီး" - သစ်သီးလှူ',
+        '🕯️ "ဆီမီး" - ဆီမီးလှူ'
+      ]);
+    }
+
+    if (state.titleEnabled && state.liveTitle) {
+      const bx = 130, by = 505, bw = W - 260, bh = 96;
+      ctx.fillStyle = 'rgba(15, 18, 24, 0.82)';
+      drawRoundRect(bx, by, bw, bh, 20);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = '#facc15';
+      ctx.font = 'bold 46px Pyidaungsu, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(state.liveTitle, W / 2, by + bh / 2 + 2);
+    }
+
+    for (const ft of floatingTexts) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, ft.alpha);
+      ctx.font = 'bold 30px Pyidaungsu, sans-serif';
+      const w = ctx.measureText(ft.text).width + 44;
+      ctx.fillStyle = 'rgba(17, 24, 39, 0.88)';
+      drawRoundRect(ft.x - w / 2, ft.y - 26, w, 52, 26);
+      ctx.fill();
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#fde047';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+  }
+
+  function drawGuideCard(x, y, w, h, lines) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 18, 25, 0.78)';
+    drawRoundRect(x, y, w, h, 18);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    lines.forEach((line, idx) => {
+      ctx.fillStyle = idx === 0 ? '#fde047' : '#f3f4f6';
+      ctx.font = idx === 0 ? 'bold 25px Pyidaungsu, sans-serif' : '23px Pyidaungsu, sans-serif';
+      ctx.fillText(line, x + 20, y + 18 + idx * 43);
+    });
+    ctx.restore();
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    if (state.customBg) {
+      ctx.drawImage(state.customBg, 0, 0, W, H);
+      drawGoldenLightRays();
+    } else {
+      drawDefaultScene();
+    }
+
+    // Incense burner & rising smoke
+    drawIncensePotAndSmoke();
+
+    // Falling golden leaves
+    ctx.fillStyle = 'rgba(253, 224, 71, 0.55)';
+    for (const p of leafParticles) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Seated devotees sorted back-to-front
+    const sortedSeats = [...seats].sort((a, b) => a.y - b.y);
+    for (const s of sortedSeats) {
+      if (s.occupant) {
+        drawDevotee(s.x, s.y, s.scale, s.occupant.nickname, s.occupant.isFemale, 'kneel');
+      }
+    }
+
+    // Active walking / worshipping devotee
+    if (activeWalker) {
+      const w = activeWalker;
+      const pose = w.phase === 'worship' ? 'bow' : 'walk';
+      const bob = w.phase === 'worship' ? 0 : Math.abs(Math.sin(w.step)) * -6;
+      drawDevotee(w.x, w.y, 1.05, w.nickname, w.isFemale, pose, w.offeringType, bob);
+    }
+
+    drawOverlays();
+  }
+
+  function loop() {
+    updateSimulation();
+    render();
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  // --- HANDLE TIKTOK LIVE EVENTS ---
+  function handleIncomingEvent(data) {
+    if (data.type === 'join') {
+      enqueueAction('join', data);
+    } else if (data.type === 'chat' && state.commentsEnabled) {
+      const txt = data.comment || '';
+      if (txt.includes('ပန်း')) enqueueAction('offer', data, 'flower', 'ပန်းကပ်လှူပူဇော်သည်');
+      else if (txt.includes('ရေ')) enqueueAction('offer', data, 'water', 'ရေချမ်းကပ်လှူသည်');
+      else if (txt.includes('သစ်သီး')) enqueueAction('offer', data, 'fruit', 'သစ်သီးဆွမ်းကပ်လှူသည်');
+      else if (txt.includes('ဆီမီး')) enqueueAction('offer', data, 'lamp', 'ဆီမီးပူဇော်သည်');
+    } else if (data.type === 'gift' && state.giftsEnabled) {
+      const g = (data.giftName || '').toLowerCase();
+      if (g.includes('rose')) {
+        enqueueAction('offer', data, 'flower', `Rose (${data.repeatCount}x) ပန်းကပ်လှူသည်`);
+      } else if (g.includes('ice cream')) {
+        enqueueAction('offer', data, 'water', `Ice Cream (${data.repeatCount}x) ရေချမ်းကပ်သည်`);
+      } else if (g.includes('gg')) {
+        enqueueAction('offer', data, 'fruit', `GG (${data.repeatCount}x) သစ်သီးလှူသည်`);
+      } else {
+        enqueueAction('offer', data, 'lamp', `${data.giftName} (${data.repeatCount}x) ကပ်လှူသည်`);
+      }
+    }
+  }
+
+  // --- WEBSOCKET CONNECTION ---
+  let socket = null;
+  const wsStatus = document.getElementById('wsStatus');
+  const connectBtn = document.getElementById('connectBtn');
+
+  function setStatus(status, label) {
+    wsStatus.className = 'status-pill ' + status;
+    wsStatus.textContent = label;
+    if (status === 'connected') {
+      connectBtn.textContent = 'Disconnect LIVE';
+      connectBtn.classList.add('disconnect');
+    } else {
+      connectBtn.textContent = 'Connect TikTok LIVE';
+      connectBtn.classList.remove('disconnect');
+    }
+  }
+
+  connectBtn.addEventListener('click', () => {
+    ensureAudioCtx();
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ action: 'disconnect' }));
+      socket.close();
+      socket = null;
+      setStatus('', 'Offline');
+      return;
+    }
+
+    const url = document.getElementById('wsUrlInput').value.trim();
+    const user = document.getElementById('usernameInput').value.trim();
+    if (!url || !user) {
+      alert('Server URL နှင့် TikTok Username ထည့်ပေးပါ။');
+      return;
+    }
+
+    localStorage.setItem('dhamma_ws', url);
+    localStorage.setItem('dhamma_user', user);
+
+    setStatus('connecting', 'Connecting...');
+    socket = new WebSocket(url);
+
+    socket.onopen = () => {
+      socket.send(JSON.stringify({ action: 'connect', username: user }));
+    };
+
+    socket.onmessage = (ev) => {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'status') {
+        if (msg.status === 'connected') setStatus('connected', 'Connected');
+        else if (msg.status === 'connecting') setStatus('connecting', 'Connecting...');
+        else setStatus('error', msg.message || 'Offline');
+      } else {
+        handleIncomingEvent(msg);
+      }
+    };
+
+    socket.onerror = () => setStatus('error', 'Server Error');
+    socket.onclose = () => setStatus('', 'Offline');
+  });
+
+  // --- UI & DOUBLE-TAP CONTROLS ---
+  const modal = document.getElementById('controlModal');
+  function toggleModal() {
+    ensureAudioCtx();
+    modal.classList.toggle('open');
+  }
+
+  let lastTap = 0;
+  canvas.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTap < 350) {
+      e.preventDefault();
+      toggleModal();
+    }
+    lastTap = now;
+  });
+  canvas.addEventListener('dblclick', toggleModal);
+  document.getElementById('menuBtn').addEventListener('click', toggleModal);
+  document.getElementById('doneBtn').addEventListener('click', () => modal.classList.remove('open'));
+
+  document.querySelectorAll('.switch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      const key = sw.dataset.key;
+      state[key] = !state[key];
+      sw.classList.toggle('on', state[key]);
+    });
+  });
+
+  document.getElementById('liveTitleInput').addEventListener('input', (e) => {
+    state.liveTitle = e.target.value;
+    localStorage.setItem('dhamma_title', state.liveTitle);
+  });
+  document.getElementById('charScaleSlider').addEventListener('input', (e) => {
+    state.charScale = parseFloat(e.target.value);
+    localStorage.setItem('dhamma_char_scale', state.charScale);
+  });
+  document.getElementById('songVol').addEventListener('input', (e) => {
+    state.songVolume = parseFloat(e.target.value);
+    audioPlayer.volume = state.songVolume;
+  });
+  document.getElementById('sfxVol').addEventListener('input', (e) => {
+    state.sfxVolume = parseFloat(e.target.value);
+  });
+
+  document.getElementById('pickAudioBtn').addEventListener('click', () => {
+    document.getElementById('audioInput').click();
+  });
+  document.getElementById('audioInput').addEventListener('change', (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    playlist = files.map(f => ({ name: f.name, url: URL.createObjectURL(f) }));
+    trackIdx = 0;
+    playCurrentTrack();
+  });
+
+  document.getElementById('playPauseBtn').addEventListener('click', () => {
+    ensureAudioCtx();
+    if (!playlist.length) {
+      document.getElementById('audioInput').click();
+      return;
+    }
+    if (audioPlayer.paused) {
+      audioPlayer.play();
+      document.getElementById('playPauseBtn').textContent = '⏸ Pause';
+    } else {
+      audioPlayer.pause();
+      document.getElementById('playPauseBtn').textContent = '▶ Play';
+    }
+  });
+
+  document.getElementById('restartSeatsBtn').addEventListener('click', () => {
+    initSeats();
+    activeWalker = null;
+    actionQueue.length = 0;
+  });
+
+  document.getElementById('pickBgBtn').addEventListener('click', () => {
+    document.getElementById('bgInput').click();
+  });
+  document.getElementById('bgInput').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = () => { state.customBg = img; };
+    img.src = URL.createObjectURL(file);
+  });
+
+  const sampleNames = ['မသီတာ', 'ကိုအောင်ကျော်', 'ဒေါ်ခင်မြ', 'ဦးဇော်မင်း', 'မနှင်းဝေ', 'Ma Su', 'Ko Min'];
+  const pickSample = () => sampleNames[Math.floor(Math.random() * sampleNames.length)];
+
+  window.simJoin = () => {
+    ensureAudioCtx();
+    const name = pickSample();
+    handleIncomingEvent({ type: 'join', nickname: name, uniqueId: name + Math.random() });
+  };
+  window.simGift = (giftName) => {
+    ensureAudioCtx();
+    const name = pickSample();
+    handleIncomingEvent({ type: 'gift', nickname: name, uniqueId: name + Math.random(), giftName, repeatCount: 1 });
+  };
+})();
+</script>
+</body>
+</html>
