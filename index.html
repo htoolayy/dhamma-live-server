@@ -36,19 +36,29 @@
     }
     #controlModal.open { display: flex; }
     .panel {
-      width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;
+      width: 100%; max-width: 400px; max-height: 88vh; overflow-y: auto;
       background: #181a20; border: 1.5px solid #d4a644; border-radius: 18px;
-      padding: 14px; color: #f3f4f6; box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+      padding: 0 14px 16px 14px; color: #f3f4f6; box-shadow: 0 20px 50px rgba(0,0,0,0.85);
     }
+    /* Sticky Top Header with Done Button */
     .panel-header {
+      position: sticky; top: 0; z-index: 15;
+      background: #181a20;
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #2c303a;
+      padding: 12px 0 10px 0; margin-bottom: 10px; border-bottom: 1px solid #2c303a;
     }
     .live-badge {
       display: inline-flex; align-items: center; gap: 6px;
       font-weight: 700; font-size: 13px; color: #f87171;
     }
     .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
+    .top-done-btn {
+      padding: 6px 16px; border-radius: 999px;
+      background: linear-gradient(135deg, #f59e0b, #d97706); border: none;
+      color: #111827; font-weight: 800; font-size: 13px; cursor: pointer;
+    }
+    .top-done-btn:active { transform: scale(0.96); }
+
     .track-name {
       font-size: 12px; color: #fbbf24; margin-bottom: 10px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -124,11 +134,6 @@
       background: #262a36; border: 1px solid #3f4556; color: #e5e7eb;
       padding: 7px; border-radius: 8px; font-size: 11px; cursor: pointer;
     }
-    .done-btn {
-      width: 100%; margin-top: 12px; padding: 11px; border-radius: 12px;
-      background: linear-gradient(135deg, #f59e0b, #d97706); border: none;
-      color: #111827; font-weight: 800; font-size: 14px; cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -139,8 +144,8 @@
   <div id="controlModal">
     <div class="panel">
       <div class="panel-header">
-        <span class="live-badge"><span class="live-dot"></span> DHAMMA LIVE STUDIO</span>
-        <span style="font-size:11px; color:#9ca3af;">Double-tap screen</span>
+        <span class="live-badge"><span class="live-dot"></span> DHAMMA STUDIO</span>
+        <button class="top-done-btn" id="doneBtn">✓ Done</button>
       </div>
 
       <div class="track-name" id="trackLabel">🎵 တရားတော် MP3 မရွေးရသေးပါ</div>
@@ -154,7 +159,6 @@
       <input type="file" id="audioInput" accept="audio/*" multiple hidden />
       <input type="file" id="bgInput" accept="image/*" hidden />
 
-      <!-- PNG Character Sprites Picker -->
       <div class="section-box">
         <div class="section-title">
           <span>🧍 PNG ဇာတ်ကောင်ပုံများ</span>
@@ -238,8 +242,6 @@
           <button class="test-btn" onclick="simGift('GG')">🎮 Test GG (သစ်သီး)</button>
         </div>
       </div>
-
-      <button class="done-btn" id="doneBtn">✓ Done</button>
     </div>
   </div>
 </div>
@@ -288,7 +290,7 @@
   document.getElementById('usernameInput').value = state.username;
   document.getElementById('charScaleSlider').value = state.charScale;
 
-  // --- AUTO-LOAD BACKGROUND & CHARACTER PNGs FROM ROOT DIRECTORY ---
+  // --- AUTO-LOAD BACKGROUND & CHARACTER PNGs FROM ROOT ---
   function tryLoadBg(paths, idx = 0) {
     if (idx >= paths.length) return;
     const img = new Image();
@@ -305,22 +307,14 @@
     maleWalk: null,
     maleKneel: null,
     femaleWalk: null,
-    femaleKneel: null,
-    flower: null,
-    water: null,
-    fruit: null,
-    lamp: null
+    femaleKneel: null
   };
 
   const defaultAssetPaths = {
     maleWalk: 'male_walk.png',
     maleKneel: 'male_kneel.png',
     femaleWalk: 'female_walk.png',
-    femaleKneel: 'female_kneel.png',
-    flower: 'flower.png',
-    water: 'water.png',
-    fruit: 'fruit.png',
-    lamp: 'lamp.png'
+    femaleKneel: 'female_kneel.png'
   };
 
   const spriteBtnMap = {
@@ -420,28 +414,28 @@
     }
   }, 16000);
 
-  // --- SEATING GRID (16 Left + 16 Right = 32 Seats aligned to carpets) ---
+  // --- SEATING GRID (Centered strictly inside Left & Right Floral Carpets) ---
   const seats = [];
   function initSeats(populateCrowd = state.initialCrowdEnabled) {
     seats.length = 0;
     const rows = 8;
-    const startY = 1290;
-    const endY = 1835;
+    const startY = 1280;
+    const endY = 1845;
 
     for (let r = 0; r < rows; r++) {
       const t = r / (rows - 1);
       const y = startY + t * (endY - startY);
       const perspective = 0.68 + t * 0.36;
 
-      // Left floral carpet (2 columns)
-      const leftOuterX = 275 - t * 95;
-      const leftInnerX = 395 - t * 65;
+      // Left floral carpet (stays strictly inside carpet bounds, clear of walkway)
+      const leftOuterX = 185 - t * 95;
+      const leftInnerX = 310 - t * 90;
       seats.push({ side: 'L', row: r, col: 0, x: leftOuterX, y, scale: perspective, occupant: null });
       seats.push({ side: 'L', row: r, col: 1, x: leftInnerX, y, scale: perspective, occupant: null });
 
-      // Right floral carpet (2 columns)
-      const rightInnerX = 685 + t * 65;
-      const rightOuterX = 805 + t * 95;
+      // Right floral carpet (stays strictly inside carpet bounds, clear of walkway)
+      const rightInnerX = 770 + t * 90;
+      const rightOuterX = 895 + t * 95;
       seats.push({ side: 'R', row: r, col: 0, x: rightInnerX, y, scale: perspective, occupant: null });
       seats.push({ side: 'R', row: r, col: 1, x: rightOuterX, y, scale: perspective, occupant: null });
     }
@@ -461,13 +455,14 @@
   }
   initSeats(true);
 
-  // --- PARTICLES: GOLDEN LEAVES + INCENSE SMOKE ---
+  // --- PARTICLES & MARQUEE STATE ---
   const actionQueue = [];
   let activeWalker = null;
   const floatingTexts = [];
   const leafParticles = [];
   const smokeParticles = [];
   let rayAngle = 0;
+  let titleScrollX = null;
 
   for (let i = 0; i < 20; i++) {
     leafParticles.push({
@@ -744,8 +739,8 @@
     ctx.closePath();
     ctx.fill();
 
-    drawCarpet(140, 440, 40, 365);
-    drawCarpet(640, 940, 715, 1040);
+    drawCarpet(100, 395, 10, 300);
+    drawCarpet(685, 980, 780, 1070);
   }
 
   function drawCarpet(topL, topR, botL, botR) {
@@ -886,6 +881,7 @@
       ]);
     }
 
+    // Marquee Scrolling Live Title Banner (Left -> Right -> Re-enter from Left)
     if (state.titleEnabled && state.liveTitle) {
       const bx = 135, by = 860, bw = W - 270, bh = 86;
       ctx.fillStyle = 'rgba(15, 18, 24, 0.82)';
@@ -895,11 +891,26 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
+      ctx.save();
+      drawRoundRect(bx + 12, by + 4, bw - 24, bh - 8, 14);
+      ctx.clip();
+
       ctx.fillStyle = '#facc15';
       ctx.font = 'bold 42px Pyidaungsu, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(state.liveTitle, W / 2, by + bh / 2 + 2);
+
+      const tw = ctx.measureText(state.liveTitle).width;
+      if (titleScrollX === null) {
+        titleScrollX = bx - tw / 2;
+      }
+      titleScrollX += 2.2;
+      if (titleScrollX - tw / 2 > bx + bw) {
+        titleScrollX = bx - tw / 2;
+      }
+
+      ctx.fillText(state.liveTitle, titleScrollX, by + bh / 2 + 2);
+      ctx.restore();
     }
 
     for (const ft of floatingTexts) {
@@ -1078,6 +1089,9 @@
   canvas.addEventListener('dblclick', toggleModal);
   document.getElementById('menuBtn').addEventListener('click', toggleModal);
   document.getElementById('doneBtn').addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.remove('open');
+  });
 
   document.querySelectorAll('.switch').forEach(sw => {
     sw.addEventListener('click', () => {
@@ -1092,6 +1106,7 @@
 
   document.getElementById('liveTitleInput').addEventListener('input', (e) => {
     state.liveTitle = e.target.value;
+    titleScrollX = null;
     localStorage.setItem('dhamma_title', state.liveTitle);
   });
   document.getElementById('charScaleSlider').addEventListener('input', (e) => {
